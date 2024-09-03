@@ -9,6 +9,8 @@ var EmptyError = errors.New("cannot serialize empty error")
 
 var SimpleStringsError = errors.New("cannot serialize simple strings with \\n or \\r")
 
+var RespNil = "$-1\r\n"
+
 type RespSerializer struct{}
 
 func (RespSerializer) SerializeString(data string) ([]byte, error) {
