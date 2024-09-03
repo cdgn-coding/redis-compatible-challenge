@@ -115,6 +115,12 @@ func TestRespSerializer_SerializeBulkString(t *testing.T) {
 			message:  "Bulk string with break line",
 			err:      nil,
 		},
+		{
+			data:     "",
+			expected: []byte("$0\r\n\r\n"),
+			message:  "Empty Bulk string",
+			err:      nil,
+		},
 	}
 
 	serializer := RespSerializer{}
