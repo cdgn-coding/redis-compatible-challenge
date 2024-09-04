@@ -23,7 +23,7 @@ func handleClient(conn net.Conn) {
 		scanner := bufio.NewScanner(conn)
 		payload, err := parser.ParseWithScanner(scanner)
 		if err != nil {
-			logger.Println(err)
+			logger.Printf("client closed connection from %s", conn.RemoteAddr())
 			return
 		}
 
@@ -62,6 +62,10 @@ func main() {
 		logger.Fatal(err)
 	}
 
+	defer listener.Close()
+
+	logger.Println("Listening on :3000...")
+
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
@@ -72,8 +76,6 @@ func main() {
 		logger.Printf("accepted connection from %s", conn.RemoteAddr())
 		go handleClient(conn)
 	}
-
-	defer listener.Close()
 }
 
 //TIP See GoLand help at <a href="https://www.jetbrains.com/help/go/">jetbrains.com/help/go/</a>.
