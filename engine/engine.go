@@ -7,9 +7,17 @@ import (
 
 var UnsupportedCommandError = errors.New("unsupported command")
 
-type Engine struct{}
+type Engine struct {
+	memory map[string]interface{}
+}
 
-func (e Engine) Process(payload interface{}) ([]interface{}, error) {
+func NewEngine() *Engine {
+	return &Engine{
+		memory: make(map[string]interface{}),
+	}
+}
+
+func (e *Engine) Process(payload interface{}) (interface{}, error) {
 	if reflect.TypeOf(payload).Kind() != reflect.Slice {
 		return nil, UnsupportedCommandError
 	}
@@ -30,6 +38,19 @@ func (e Engine) Process(payload interface{}) ([]interface{}, error) {
 		return []interface{}{"PONG"}, nil
 	case "ECHO":
 		return payloadArray[1:], nil
+	case "GET":
+		key := payloadArray[1].(string)
+		val, ok := e.memory[key]
+		if !ok {
+			return nil, nil
+		}
+
+		return val, nil
+	case "SET":
+		key := payloadArray[1].(string)
+		val := payloadArray[2]
+		e.memory[key] = val
+		return nil, nil
 	default:
 		return nil, UnsupportedCommandError
 	}

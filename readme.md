@@ -17,7 +17,11 @@ Based on the [Redis Protocol Specification](https://redis.io/docs/latest/develop
   - [x] PING
   - [x] ECHO
   - [ ] SET
+    - [x] Basic
+    - [ ] Options
   - [ ] GET
+      - [x] Basic
+      - [ ] Options
   - [ ] DEL
   - [ ] EXISTS
   - [ ] INCR

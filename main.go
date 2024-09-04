@@ -15,7 +15,7 @@ var parser = resp.RespParser{}
 
 var serializer = resp.RespSerializer{}
 
-var eng = engine.Engine{}
+var eng = engine.NewEngine()
 
 func handleClient(conn net.Conn) {
 	var serialized []byte
