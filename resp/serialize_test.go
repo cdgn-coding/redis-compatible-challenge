@@ -174,6 +174,12 @@ func TestRespSerializer_SerializeArray(t *testing.T) {
 			message:  "Array of arrays",
 			err:      nil,
 		},
+		{
+			data:     []interface{}{errors.New("some error")},
+			expected: []byte("*1\r\n-some error\r\n"),
+			message:  "Array with error",
+			err:      nil,
+		},
 	}
 
 	serializer := RespSerializer{}

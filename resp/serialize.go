@@ -16,6 +16,8 @@ var ArrayError = errors.New("cannot serialize array")
 
 var RespNull = "$-1\r\n"
 
+var errorInterface = reflect.TypeOf((*error)(nil)).Elem()
+
 type RespSerializer struct{}
 
 func (RespSerializer) SerializeString(data string) ([]byte, error) {
@@ -63,6 +65,14 @@ func (s RespSerializer) SerializeArray(data []interface{}) ([]byte, error) {
 			part, err = s.SerializeInteger(int64(element.(int)))
 		case reflect.String:
 			part, err = s.SerializeBulkString(element.(string))
+		case reflect.Ptr:
+			if element == nil {
+				part = []byte(RespNull)
+			} else if t.Implements(errorInterface) {
+				part, err = s.SerializeError(element.(error))
+			} else {
+				return nil, UnknownType
+			}
 		default:
 			return nil, UnknownType
 		}
