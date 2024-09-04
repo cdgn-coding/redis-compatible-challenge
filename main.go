@@ -2,11 +2,16 @@ package main
 
 import (
 	"bufio"
+	"context"
+	"flag"
+	"fmt"
 	"github.com/cdgn-coding/redis-compatible-challenge/engine"
 	"github.com/cdgn-coding/redis-compatible-challenge/resp"
 	"log"
 	"net"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 var logger = log.New(os.Stdout, "", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
@@ -56,8 +61,8 @@ func handleClient(conn net.Conn) {
 	defer conn.Close()
 }
 
-func main() {
-	listener, err := net.Listen("tcp", ":3000")
+func startServer(ctx context.Context, port string) {
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -67,15 +72,43 @@ func main() {
 	logger.Println("Listening on :3000...")
 
 	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			logger.Println(err)
-			continue
-		}
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			conn, err := listener.Accept()
+			if err != nil {
+				logger.Println(err)
+				continue
+			}
 
-		logger.Printf("accepted connection from %s", conn.RemoteAddr())
-		go handleClient(conn)
+			logger.Printf("accepted connection from %s", conn.RemoteAddr())
+			go handleClient(conn)
+		}
 	}
+}
+
+var port = flag.String("port", "3000", "redis port")
+
+func main() {
+	flag.Parse()
+
+	/*cpu, err := os.Create("cpu.prof")
+	if err != nil {
+		log.Fatal(err)
+	}
+	pprof.StartCPUProfile(cpu)
+	defer pprof.StopCPUProfile()*/
+
+	ctx, cancel := context.WithCancel(context.Background())
+	go startServer(ctx, *port)
+
+	signalCh := make(chan os.Signal, 1)
+	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
+
+	// Wait for termination signal
+	<-signalCh
+	cancel()
 }
 
 //TIP See GoLand help at <a href="https://www.jetbrains.com/help/go/">jetbrains.com/help/go/</a>.

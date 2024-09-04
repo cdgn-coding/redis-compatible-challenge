@@ -20,6 +20,7 @@ var NumberOfBytesOff = errors.New("number of bytes off")
 func (p RespParser) Parse(data []byte) (interface{}, error) {
 	reader := bytes.NewReader(data)
 	scanner := bufio.NewScanner(reader)
+
 	scanner.Split(bufio.ScanLines)
 	return p.ParseWithScanner(scanner)
 }
