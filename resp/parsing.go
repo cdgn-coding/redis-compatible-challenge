@@ -21,10 +21,10 @@ func (p RespParser) Parse(data []byte) (interface{}, error) {
 	reader := bytes.NewReader(data)
 	scanner := bufio.NewScanner(reader)
 	scanner.Split(bufio.ScanLines)
-	return p.parseWithScanner(scanner)
+	return p.ParseWithScanner(scanner)
 }
 
-func (p RespParser) parseWithScanner(scanner *bufio.Scanner) (interface{}, error) {
+func (p RespParser) ParseWithScanner(scanner *bufio.Scanner) (interface{}, error) {
 	var line []byte
 
 	for scanner.Scan() {
@@ -40,7 +40,7 @@ func (p RespParser) parseWithScanner(scanner *bufio.Scanner) (interface{}, error
 
 			result := make([]interface{}, count)
 			for i := 0; i < count; i++ {
-				part, err := p.parseWithScanner(scanner)
+				part, err := p.ParseWithScanner(scanner)
 
 				if err != nil {
 					return nil, err

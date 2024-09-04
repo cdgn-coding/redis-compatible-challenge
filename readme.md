@@ -10,11 +10,11 @@ The goal is to create a simplified version of Redis, implementing core functiona
 
 Based on the [Redis Protocol Specification](https://redis.io/docs/latest/develop/reference/protocol-spec/), implement the following aspects:
 
-- [ ] RESP2 (Redis Serialization Protocol) parsing
+- [x] RESP2 (Redis Serialization Protocol) parsing
 - [x] RESP2 (Redis Serialization Protocol) serialization
-- [ ] Client-server communication
-- [ ] Implement commands
-  - [ ] PING
+- [x] Client-server communication
+- [x] Implement commands
+  - [x] PING
   - [ ] ECHO
   - [ ] SET
   - [ ] GET
