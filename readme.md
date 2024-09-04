@@ -72,6 +72,17 @@ To run tests with verbose output:
 go test -v ./...
 ```
 
+## Benchmark
+
+Initial implementation benchmark
+
+```
+cdgn@MBP-de-Carlos ~ % redis-benchmark -p 3000 -t SET,GET -q
+WARNING: Could not fetch server CONFIG
+SET: 74794.31 requests per second, p50=0.327 msec                   
+GET: 67888.66 requests per second, p50=0.335 msec
+```
+
 ## Contributing
 
 1. Fork the repository
