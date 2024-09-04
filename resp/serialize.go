@@ -20,6 +20,31 @@ var errorInterface = reflect.TypeOf((*error)(nil)).Elem()
 
 type RespSerializer struct{}
 
+func (s RespSerializer) Serialize(element interface{}) ([]byte, error) {
+	if element == nil {
+		return []byte(RespNull), nil
+	}
+
+	t := reflect.TypeOf(element)
+
+	switch t.Kind() {
+	case reflect.Slice, reflect.Array:
+		return s.SerializeArray(element.([]interface{}))
+	case reflect.Int:
+		return s.SerializeInteger(int64(element.(int)))
+	case reflect.String:
+		return s.SerializeBulkString(element.(string))
+	case reflect.Ptr:
+		if t.Implements(errorInterface) {
+			return s.SerializeError(element.(error))
+		} else {
+			return nil, UnknownType
+		}
+	default:
+		return nil, UnknownType
+	}
+}
+
 func (RespSerializer) SerializeString(data string) ([]byte, error) {
 	for c := range data {
 		if c == '\n' || c == '\r' {
@@ -53,29 +78,9 @@ func (s RespSerializer) SerializeArray(data []interface{}) ([]byte, error) {
 	result := []byte(fmt.Sprintf("*%d\r\n", len(data)))
 	var err error
 	var part []byte
-	// var err error
 
 	for _, element := range data {
-		t := reflect.TypeOf(element)
-
-		switch t.Kind() {
-		case reflect.Slice, reflect.Array:
-			part, err = s.SerializeArray(element.([]interface{}))
-		case reflect.Int:
-			part, err = s.SerializeInteger(int64(element.(int)))
-		case reflect.String:
-			part, err = s.SerializeBulkString(element.(string))
-		case reflect.Ptr:
-			if element == nil {
-				part = []byte(RespNull)
-			} else if t.Implements(errorInterface) {
-				part, err = s.SerializeError(element.(error))
-			} else {
-				return nil, UnknownType
-			}
-		default:
-			return nil, UnknownType
-		}
+		part, err = s.Serialize(element)
 
 		if err != nil {
 			return nil, errors.Join(err, ArrayError)
