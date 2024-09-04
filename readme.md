@@ -15,7 +15,7 @@ Based on the [Redis Protocol Specification](https://redis.io/docs/latest/develop
 - [x] Client-server communication
 - [x] Implement commands
   - [x] PING
-  - [ ] ECHO
+  - [x] ECHO
   - [ ] SET
   - [ ] GET
   - [ ] DEL

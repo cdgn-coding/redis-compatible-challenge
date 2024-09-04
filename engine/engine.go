@@ -15,11 +15,11 @@ func (e Engine) Process(payload interface{}) ([]interface{}, error) {
 	}
 
 	payloadArray := payload.([]interface{})
-	firstPart := string(payloadArray[0].([]byte))
+	firstPart := payloadArray[0].(string)
 
 	switch firstPart {
 	case "COMMAND":
-		command := string(payloadArray[1].([]byte))
+		command := payloadArray[1].(string)
 		switch command {
 		case "DOCS":
 			return []interface{}{}, nil
@@ -28,6 +28,8 @@ func (e Engine) Process(payload interface{}) ([]interface{}, error) {
 		}
 	case "PING":
 		return []interface{}{"PONG"}, nil
+	case "ECHO":
+		return payloadArray[1:], nil
 	default:
 		return nil, UnsupportedCommandError
 	}

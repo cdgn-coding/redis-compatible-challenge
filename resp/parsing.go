@@ -58,7 +58,7 @@ func (p RespParser) ParseWithScanner(scanner *bufio.Scanner) (interface{}, error
 
 			return int64(integer), nil
 		case '+':
-			return line[1:], nil
+			return string(line[1:]), nil
 		case '-':
 			restOfLine := string(line[1:])
 			return errors.New(restOfLine), nil
@@ -88,7 +88,7 @@ func (p RespParser) ParseWithScanner(scanner *bufio.Scanner) (interface{}, error
 				}
 			}
 
-			return result, nil
+			return string(result), nil
 		default:
 			return nil, UnsupportedType
 		}

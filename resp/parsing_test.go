@@ -22,7 +22,7 @@ func TestRespParser_Parse(t *testing.T) {
 		{
 			name:    "Simple string",
 			data:    []byte("+OK\r\n"),
-			want:    []byte("OK"),
+			want:    "OK",
 			wantErr: false,
 		},
 		{
@@ -32,13 +32,13 @@ func TestRespParser_Parse(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			want:    []byte("normal string"),
+			want:    "normal string",
 			data:    []byte("$13\r\nnormal string\r\n"),
 			name:    "Bulk string with no especial characters",
 			wantErr: false,
 		},
 		{
-			want:    []byte("string with\nbreak line"),
+			want:    "string with\nbreak line",
 			data:    []byte("$22\r\nstring with\nbreak line\r\n"),
 			name:    "Bulk string with break line",
 			wantErr: false,
@@ -57,8 +57,8 @@ func TestRespParser_Parse(t *testing.T) {
 		},
 		{
 			want: []interface{}{
-				[]byte("hello"),
-				[]byte("world"),
+				"hello",
+				"world",
 			},
 			data:    []byte("*2\r\n$5\r\nhello\r\n$5\r\nworld\r\n"),
 			name:    "Array two bulk strings",
@@ -71,13 +71,13 @@ func TestRespParser_Parse(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			want:    []interface{}{int64(1), int64(2), int64(3), int64(4), []byte("hello")},
+			want:    []interface{}{int64(1), int64(2), int64(3), int64(4), "hello"},
 			data:    []byte("*5\r\n:1\r\n:2\r\n:3\r\n:4\r\n$5\r\nhello\r\n"),
 			name:    "Array of mixed data types",
 			wantErr: false,
 		},
 		{
-			want:    []interface{}{[]interface{}{int64(1), int64(2), int64(3), int64(4)}, []interface{}{[]byte("hello"), []byte("world")}},
+			want:    []interface{}{[]interface{}{int64(1), int64(2), int64(3), int64(4)}, []interface{}{"hello", "world"}},
 			data:    []byte("*2\r\n*4\r\n:1\r\n:2\r\n:3\r\n:4\r\n*2\r\n$5\r\nhello\r\n$5\r\nworld\r\n"),
 			name:    "Array of arrays",
 			wantErr: false,
