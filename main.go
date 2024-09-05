@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
@@ -23,10 +24,11 @@ var serializer = resp.RespSerializer{}
 var eng = engine.NewEngine()
 
 func handleClient(conn net.Conn) {
-	var serialized []byte
+	var serialized *bytes.Buffer
+	scanner := bufio.NewScanner(conn)
 	for {
-		scanner := bufio.NewScanner(conn)
 		payload, err := parser.ParseWithScanner(scanner)
+
 		if err != nil {
 			logger.Printf("client closed connection from %s", conn.RemoteAddr())
 			return
@@ -39,7 +41,7 @@ func handleClient(conn net.Conn) {
 		if err != nil {
 			logger.Println(err)
 			serialized, _ = serializer.Serialize(err)
-			_, err = conn.Write(serialized)
+			_, err = conn.Write(serialized.Bytes())
 			return
 		}
 
@@ -50,12 +52,16 @@ func handleClient(conn net.Conn) {
 		if err != nil {
 			logger.Println(err)
 			serialized, _ = serializer.Serialize(err)
-			_, err = conn.Write(serialized)
+			_, err = conn.Write(serialized.Bytes())
 			return
 		}
 
 		// Write response
-		_, err = conn.Write(serialized)
+		_, err = conn.Write(serialized.Bytes())
+		if err != nil {
+			logger.Println(err)
+			return
+		}
 	}
 
 	defer conn.Close()

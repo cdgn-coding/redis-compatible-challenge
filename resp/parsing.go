@@ -20,27 +20,27 @@ var NumberOfBytesOff = errors.New("number of bytes off")
 func (p RespParser) Parse(data []byte) (interface{}, error) {
 	reader := bytes.NewReader(data)
 	scanner := bufio.NewScanner(reader)
-
 	scanner.Split(bufio.ScanLines)
 	return p.ParseWithScanner(scanner)
 }
 
 func (p RespParser) ParseWithScanner(scanner *bufio.Scanner) (interface{}, error) {
 	var line []byte
+	var i int64 = 0
+	var read int
 
 	for scanner.Scan() {
 		line = scanner.Bytes()
 
 		switch line[0] {
 		case '*':
-			restOfLine := string(line[1:])
-			count, err := strconv.Atoi(restOfLine)
+			count, err := strconv.ParseInt(string(line[1:]), 10, 64)
 			if err != nil {
 				return nil, errors.Join(err, TypeMismatchError)
 			}
 
 			result := make([]interface{}, count)
-			for i := 0; i < count; i++ {
+			for i = 0; i < count; i++ {
 				part, err := p.ParseWithScanner(scanner)
 
 				if err != nil {
@@ -51,26 +51,23 @@ func (p RespParser) ParseWithScanner(scanner *bufio.Scanner) (interface{}, error
 			}
 			return result, nil
 		case ':':
-			restOfLine := string(line[1:])
-			integer, err := strconv.Atoi(restOfLine)
+			integer, err := strconv.ParseInt(string(line[1:]), 10, 64)
 			if err != nil {
 				return nil, errors.Join(err, TypeMismatchError)
 			}
 
-			return int64(integer), nil
+			return integer, nil
 		case '+':
 			return string(line[1:]), nil
 		case '-':
-			restOfLine := string(line[1:])
-			return errors.New(restOfLine), nil
+			return errors.New(string(line[1:])), nil
 		case '$':
-			restOfLine := string(line[1:])
-			totalBytes, err := strconv.Atoi(restOfLine)
+			totalBytes, err := strconv.Atoi(string(line[1:]))
 			if err != nil {
 				return nil, errors.Join(err, CannotReadDataError)
 			}
 
-			read := 0
+			read = 0
 			result := make([]byte, totalBytes)
 			for read < totalBytes {
 				scanner.Scan()

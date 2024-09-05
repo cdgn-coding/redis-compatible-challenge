@@ -13,8 +13,8 @@ type Entry struct {
 	lock  sync.Mutex
 }
 
-func NewEntry(value interface{}) Entry {
-	return Entry{
+func NewEntry(value interface{}) *Entry {
+	return &Entry{
 		value: value,
 		lock:  sync.Mutex{},
 	}
@@ -31,12 +31,12 @@ func (e *Entry) Write(value interface{}) {
 }
 
 type ConcurrentMap struct {
-	memory map[string]Entry
+	memory map[string]*Entry
 }
 
 func NewConcurrentMap() ConcurrentMap {
 	return ConcurrentMap{
-		memory: make(map[string]Entry),
+		memory: make(map[string]*Entry),
 	}
 }
 
