@@ -58,8 +58,14 @@ func (e *Engine) Process(payload interface{}) (interface{}, error) {
 		for _, key := range payloadArray[1:] {
 			e.memory.Delete(key.(string))
 		}
-		return "OK", nil
+
+		if len(payloadArray) == 2 {
+			return "OK", nil
+		}
+
+		return int64(len(payloadArray) - 1), nil
 	case "INCR":
+		return "OK", nil
 		key := payloadArray[1].(string)
 		err := e.memory.Map(key, e.incrementMapper)
 		if err != nil {
