@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"sync"
 	"testing"
 )
 
@@ -83,5 +84,47 @@ func TestConcurrentList_PushRight(t *testing.T) {
 				i++
 			}
 		})
+	}
+}
+
+func TestConcurrentPushes(t *testing.T) {
+	list := NewConcurrentList()
+	var wg sync.WaitGroup
+	const numGoroutines = 50
+	const numPushesPerGoroutine = 100
+
+	// Test PushLeft
+	wg.Add(numGoroutines)
+	for i := 0; i < numGoroutines; i++ {
+		go func(i int) {
+			defer wg.Done()
+			for j := 0; j < numPushesPerGoroutine; j++ {
+				list.PushLeft(i*100 + j)
+			}
+		}(i)
+	}
+	wg.Wait()
+
+	if list.Len() != numGoroutines*numPushesPerGoroutine {
+		t.Errorf("Expected list length %d, got %d", numGoroutines*numPushesPerGoroutine, list.Len())
+	}
+
+	// Reset list for next test
+	list = NewConcurrentList()
+
+	// Test PushRight
+	wg.Add(numGoroutines)
+	for i := 0; i < numGoroutines; i++ {
+		go func(i int) {
+			defer wg.Done()
+			for j := 0; j < numPushesPerGoroutine; j++ {
+				list.PushRight(i*100 + j)
+			}
+		}(i)
+	}
+	wg.Wait()
+
+	if list.Len() != numGoroutines*numPushesPerGoroutine {
+		t.Errorf("Expected list length %d, got %d", numGoroutines*numPushesPerGoroutine, list.Len())
 	}
 }

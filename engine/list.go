@@ -1,6 +1,9 @@
 package engine
 
-import "iter"
+import (
+	"iter"
+	"sync"
+)
 
 type Node struct {
 	value interface{}
@@ -12,9 +15,10 @@ func NewNode(value interface{}) *Node {
 }
 
 type ConcurrentList struct {
-	head *Node
-	tail *Node
-	size int
+	head    *Node
+	tail    *Node
+	size    int
+	keyLock sync.Mutex
 }
 
 func NewConcurrentList() *ConcurrentList {
@@ -26,6 +30,9 @@ func (cl *ConcurrentList) Len() int {
 }
 
 func (cl *ConcurrentList) PushLeft(value interface{}) {
+	cl.keyLock.Lock()
+	defer cl.keyLock.Unlock()
+
 	if cl.size == 0 {
 		cl.head = NewNode(value)
 		cl.tail = cl.head
@@ -36,9 +43,13 @@ func (cl *ConcurrentList) PushLeft(value interface{}) {
 	node := NewNode(value)
 	node.next = cl.head
 	cl.head = node
+	cl.size++
 }
 
 func (cl *ConcurrentList) PushRight(value interface{}) {
+	cl.keyLock.Lock()
+	defer cl.keyLock.Unlock()
+
 	if cl.size == 0 {
 		cl.head = NewNode(value)
 		cl.tail = cl.head
@@ -49,6 +60,7 @@ func (cl *ConcurrentList) PushRight(value interface{}) {
 	node := NewNode(value)
 	cl.tail.next = node
 	cl.tail = node
+	cl.size++
 }
 
 func (cl *ConcurrentList) Iterator() iter.Seq[interface{}] {
