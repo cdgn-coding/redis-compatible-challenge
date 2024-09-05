@@ -113,3 +113,40 @@ func TestConcurrentGet(t *testing.T) {
 		}
 	}
 }
+
+func TestConcurrentMapWithIncrementDecrement(t *testing.T) {
+	cm := NewConcurrentMap()
+
+	var wg sync.WaitGroup
+	numGoroutines := 10
+
+	cm.Set("counter", 0)
+
+	// Increment and decrement the same key concurrently
+	for i := 0; i < numGoroutines; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			if i%2 == 0 {
+				cm.Map("counter", IncrementMapper, 0) // Increment
+			} else {
+				cm.Map("counter", DecrementMapper, 0) // Decrement
+			}
+		}(i)
+	}
+
+	wg.Wait()
+
+	// Check the final value of the counter
+	value, ok := cm.Get("counter")
+	if !ok {
+		t.Fatalf("expected key 'counter' to exist, but it was not found")
+	}
+
+	finalValue := value.(int)
+
+	// Since we have an equal number of increments and decrements, the final value should be 0.
+	if finalValue != 0 {
+		t.Errorf("expected final value to be 0, but got %d", finalValue)
+	}
+}
