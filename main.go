@@ -19,13 +19,11 @@ import (
 
 var logger = log.New(os.Stdout, "", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 
-var parser = resp.RespParser{}
-
-var serializer = resp.RespSerializer{}
-
 var eng = engine.NewEngine()
 
 func handleClient(conn net.Conn) {
+	var parser = resp.RespParser{}
+	var serializer = resp.RespSerializer{}
 	var serialized *bytes.Buffer
 	scanner := bufio.NewScanner(conn)
 	for {

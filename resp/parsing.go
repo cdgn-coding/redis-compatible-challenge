@@ -26,22 +26,24 @@ func (p RespParser) Parse(data []byte) (interface{}, error) {
 
 func (p RespParser) ParseWithScanner(scanner *bufio.Scanner) (interface{}, error) {
 	var line []byte
-	var i int64 = 0
-	var read int
+	var i, count int64
+	var read, totalBytes int
+	var err error
+	var part interface{}
 
 	for scanner.Scan() {
 		line = scanner.Bytes()
 
 		switch line[0] {
 		case '*':
-			count, err := strconv.ParseInt(string(line[1:]), 10, 64)
+			count, err = strconv.ParseInt(string(line[1:]), 10, 64)
 			if err != nil {
 				return nil, errors.Join(err, TypeMismatchError)
 			}
 
 			result := make([]interface{}, count)
 			for i = 0; i < count; i++ {
-				part, err := p.ParseWithScanner(scanner)
+				part, err = p.ParseWithScanner(scanner)
 
 				if err != nil {
 					return nil, err
@@ -51,18 +53,18 @@ func (p RespParser) ParseWithScanner(scanner *bufio.Scanner) (interface{}, error
 			}
 			return result, nil
 		case ':':
-			integer, err := strconv.ParseInt(string(line[1:]), 10, 64)
+			i, err = strconv.ParseInt(string(line[1:]), 10, 64)
 			if err != nil {
 				return nil, errors.Join(err, TypeMismatchError)
 			}
 
-			return integer, nil
+			return i, nil
 		case '+':
 			return string(line[1:]), nil
 		case '-':
 			return errors.New(string(line[1:])), nil
 		case '$':
-			totalBytes, err := strconv.Atoi(string(line[1:]))
+			totalBytes, err = strconv.Atoi(string(line[1:]))
 			if err != nil {
 				return nil, errors.Join(err, CannotReadDataError)
 			}
