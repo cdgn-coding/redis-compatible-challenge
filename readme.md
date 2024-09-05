@@ -74,10 +74,13 @@ go test -v ./...
 Initial implementation benchmark
 
 ```
-cdgn@MBP-de-Carlos ~ % redis-benchmark -p 3000 -t SET,GET -q
+cdgn@MBP-de-Carlos ~ % redis-benchmark -p 3000 -t INCR,GET,SET,LPUSH,RPUSH -q
 WARNING: Could not fetch server CONFIG
-SET: 74794.31 requests per second, p50=0.327 msec                   
-GET: 67888.66 requests per second, p50=0.335 msec
+SET: 71428.57 requests per second, p50=0.335 msec                   
+GET: 61050.06 requests per second, p50=0.351 msec                   
+INCR: 73909.83 requests per second, p50=0.335 msec                   
+LPUSH: 58105.75 requests per second, p50=0.391 msec                   
+RPUSH: 54171.18 requests per second, p50=0.375 msec                   
 ```
 
 ## Contributing

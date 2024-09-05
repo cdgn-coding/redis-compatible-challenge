@@ -103,7 +103,7 @@ func (c *ConcurrentMap) Map(key string, mapper MapperFunc) error {
 
 func (c *ConcurrentMap) Mutate(key string, mutator MapperFunc, constructor Constructor) (interface{}, error) {
 	c.keyLock.Lock()
-	c.keyLock.Unlock()
+	defer c.keyLock.Unlock()
 	entry, ok := c.memory[key]
 
 	if !ok {
