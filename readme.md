@@ -71,7 +71,7 @@ go test -v ./...
 
 ## Benchmark
 
-This implementation handles more requests than original redis
+This implementation handles more requests than original redis because uses all cores
 
 ```
 SET: 171.79%
