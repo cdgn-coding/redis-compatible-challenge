@@ -2,7 +2,7 @@ package engine
 
 import (
 	"errors"
-	"github.com/cdgn-coding/redis-compatible-challenge/concurrency"
+	concurrency2 "github.com/cdgn-coding/redis-compatible-challenge/pkg/concurrency"
 	"reflect"
 	"strconv"
 )
@@ -12,18 +12,34 @@ var UnsupportedCommandError = errors.New("unsupported command")
 var UnsupportedTypeForCommand = errors.New("unsupported type")
 
 func ConcurrentListConstructor() interface{} {
-	return concurrency.NewConcurrentList()
+	return concurrency2.NewConcurrentList()
 }
 
 type Engine struct {
-	memory *concurrency.ConcurrentMap
+	memory *concurrency2.ConcurrentMap
 }
 
 func NewEngine() *Engine {
 	return &Engine{
-		memory: concurrency.NewConcurrentMap(),
+		memory: concurrency2.NewConcurrentMap(),
 	}
 }
+
+const COMMAND = "COMMAND"
+const PING = "PING"
+const ECHO = "ECHO"
+const GET = "GET"
+const SET = "SET"
+const DEL = "DEL"
+const EXISTS = "EXISTS"
+const INCR = "INCR"
+const DECR = "DECR"
+const RPUSH = "RPUSH"
+const LPUSH = "LPUSH"
+
+var DOCS = []interface{}{}
+
+const OK = "OK"
 
 func (e *Engine) Process(payload interface{}) (interface{}, error) {
 	if reflect.TypeOf(payload).Kind() != reflect.Slice {
@@ -32,21 +48,20 @@ func (e *Engine) Process(payload interface{}) (interface{}, error) {
 
 	payloadArray := payload.([]interface{})
 	firstPart := payloadArray[0].(string)
-
 	switch firstPart {
-	case "COMMAND":
+	case COMMAND:
 		command := payloadArray[1].(string)
 		switch command {
 		case "DOCS":
-			return []interface{}{}, nil
+			return DOCS, nil
 		default:
 			return nil, UnsupportedCommandError
 		}
-	case "PING":
+	case PING:
 		return []interface{}{"PONG"}, nil
-	case "ECHO":
+	case ECHO:
 		return payloadArray[1:], nil
-	case "GET":
+	case GET:
 		key := payloadArray[1].(string)
 		val, ok := e.memory.Get(key)
 
@@ -55,22 +70,22 @@ func (e *Engine) Process(payload interface{}) (interface{}, error) {
 		}
 
 		return val, nil
-	case "SET":
+	case SET:
 		key := payloadArray[1].(string)
 		val := payloadArray[2]
 		e.memory.Set(key, val)
-		return "OK", nil
-	case "DEL":
+		return OK, nil
+	case DEL:
 		for _, key := range payloadArray[1:] {
 			e.memory.Delete(key.(string))
 		}
 
 		if len(payloadArray) == 2 {
-			return "OK", nil
+			return OK, nil
 		}
 
 		return int64(len(payloadArray) - 1), nil
-	case "EXISTS":
+	case EXISTS:
 		var count int64 = 0
 		for _, key := range payloadArray[1:] {
 			if e.memory.Has(key.(string)) {
@@ -79,21 +94,21 @@ func (e *Engine) Process(payload interface{}) (interface{}, error) {
 		}
 
 		return count, nil
-	case "INCR":
+	case INCR:
 		key := payloadArray[1].(string)
 		err := e.memory.Map(key, e.incrementMapper)
 		if err != nil {
 			return nil, err
 		}
-		return "OK", nil
-	case "DECR":
+		return OK, nil
+	case DECR:
 		key := payloadArray[1].(string)
 		err := e.memory.Map(key, e.incrementMapper)
 		if err != nil {
 			return nil, err
 		}
-		return "OK", nil
-	case "RPUSH":
+		return OK, nil
+	case RPUSH:
 		key := payloadArray[1].(string)
 		var val interface{}
 		var err error
@@ -104,7 +119,7 @@ func (e *Engine) Process(payload interface{}) (interface{}, error) {
 			}
 		}
 		return val, nil
-	case "LPUSH":
+	case LPUSH:
 		key := payloadArray[1].(string)
 		var val interface{}
 		var err error
@@ -120,25 +135,25 @@ func (e *Engine) Process(payload interface{}) (interface{}, error) {
 	}
 }
 
-func (e *Engine) pushRight(newValue interface{}) concurrency.MapperFunc {
+func (e *Engine) pushRight(newValue interface{}) concurrency2.MapperFunc {
 	return func(val interface{}) (interface{}, error) {
-		if concurrency.IsConcurrentList(val) {
+		if concurrency2.IsConcurrentList(val) {
 			return nil, UnsupportedTypeForCommand
 		}
 
-		list := val.(*concurrency.ConcurrentList)
+		list := val.(*concurrency2.ConcurrentList)
 		list.PushRight(newValue)
 		return list.Len(), nil
 	}
 }
 
-func (e *Engine) pushLeft(newValue interface{}) concurrency.MapperFunc {
+func (e *Engine) pushLeft(newValue interface{}) concurrency2.MapperFunc {
 	return func(val interface{}) (interface{}, error) {
-		if concurrency.IsConcurrentList(val) {
+		if concurrency2.IsConcurrentList(val) {
 			return nil, UnsupportedTypeForCommand
 		}
 
-		list := val.(*concurrency.ConcurrentList)
+		list := val.(*concurrency2.ConcurrentList)
 		list.PushLeft(newValue)
 		return list.Len(), nil
 	}

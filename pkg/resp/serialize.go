@@ -3,7 +3,7 @@ package resp
 import (
 	"bytes"
 	"errors"
-	"github.com/cdgn-coding/redis-compatible-challenge/concurrency"
+	"github.com/cdgn-coding/redis-compatible-challenge/pkg/concurrency"
 	"iter"
 	"reflect"
 	"strconv"

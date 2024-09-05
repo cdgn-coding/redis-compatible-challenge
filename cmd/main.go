@@ -6,8 +6,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/cdgn-coding/redis-compatible-challenge/engine"
-	"github.com/cdgn-coding/redis-compatible-challenge/resp"
+	"github.com/cdgn-coding/redis-compatible-challenge/pkg/engine"
+	"github.com/cdgn-coding/redis-compatible-challenge/pkg/resp"
 	"log"
 	"net"
 	"os"
@@ -94,18 +94,18 @@ func startServer(ctx context.Context, port string) {
 	}
 }
 
-var port = flag.String("port", "3000", "redis port")
-var cpu = flag.Int("cpu", 1, "cpu cores")
+var port = flag.String("port", "3000", "port")
+var threads = flag.Int("threads", 1, "number of threads")
 var profile = flag.Bool("profile", false, "profile program")
 
 func main() {
 	flag.Parse()
 
-	if *cpu > runtime.NumCPU() {
-		logger.Println("Warning cpu is beyond number of cores")
+	if *threads > runtime.NumCPU() {
+		logger.Println("Warning max threads is beyond number of cores")
 	}
-	logger.Printf("Using %d CPU", *cpu)
-	runtime.GOMAXPROCS(*cpu)
+	logger.Printf("Using %d CPU", *threads)
+	runtime.GOMAXPROCS(*threads)
 
 	if *profile {
 		logger.Println("Starting CPU profiler")
@@ -130,6 +130,3 @@ func main() {
 	<-signalCh
 	cancel()
 }
-
-//TIP See GoLand help at <a href="https://www.jetbrains.com/help/go/">jetbrains.com/help/go/</a>.
-// Also, you can try interactive lessons for GoLand by selecting 'Help | Learn IDE Features' from the main menu.
