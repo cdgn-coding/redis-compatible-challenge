@@ -53,7 +53,7 @@ func handleClient(conn net.Conn) {
 			logger.Println(err)
 			serialized, _ = serializer.Serialize(err)
 			_, err = conn.Write(serialized.Bytes())
-			return
+			continue
 		}
 
 		// Write response

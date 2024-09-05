@@ -24,10 +24,9 @@ Based on the [Redis Protocol Specification](https://redis.io/docs/latest/develop
   - [x] EXISTS
   - [x] INCR
   - [x] DECR
-  - [ ] LPUSH
-  - [ ] RPUSH
-  - [ ] LRANGE
-  - [ ] LLEN
+  - [x] LPUSH
+  - [x] RPUSH
+  - [ ] SAVE
 
 ## Getting Started
 

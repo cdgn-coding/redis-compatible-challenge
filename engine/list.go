@@ -2,6 +2,7 @@ package engine
 
 import (
 	"iter"
+	"reflect"
 	"sync"
 )
 
@@ -19,6 +20,12 @@ type ConcurrentList struct {
 	tail    *Node
 	size    int
 	keyLock sync.RWMutex
+}
+
+var ConcurrentListType = reflect.TypeOf(&ConcurrentList{})
+
+func IsConcurrentList(obj interface{}) bool {
+	return !reflect.TypeOf(obj).AssignableTo(ConcurrentListType)
 }
 
 func NewConcurrentList() *ConcurrentList {

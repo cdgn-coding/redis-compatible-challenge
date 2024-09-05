@@ -4,6 +4,8 @@ import "sync"
 
 type MapperFunc = func(v interface{}) (interface{}, error)
 
+type Constructor func() interface{}
+
 type Entry struct {
 	value interface{}
 	lock  sync.RWMutex
@@ -28,6 +30,7 @@ func (e *Entry) Write(value interface{}) {
 	e.value = value
 }
 
+// Map assumes "mapper" returns the new value to set
 func (e *Entry) Map(mapper MapperFunc) error {
 	e.lock.Lock()
 	defer e.lock.Unlock()
@@ -37,6 +40,24 @@ func (e *Entry) Map(mapper MapperFunc) error {
 	}
 	e.value = val
 	return nil
+}
+
+// Mutate assumes "mutator" takes care of race conditions for writing
+func (e *Entry) Mutate(mutator MapperFunc, constructor Constructor) (interface{}, error) {
+	e.lock.RLock()
+	defer e.lock.RLock()
+
+	if e.value == nil {
+		e.value = constructor()
+		return mutator(e.value)
+	}
+
+	val, err := mutator(e.value)
+	if err != nil {
+		return nil, err
+	}
+
+	return val, nil
 }
 
 type ConcurrentMap struct {
@@ -78,6 +99,19 @@ func (c *ConcurrentMap) Map(key string, mapper MapperFunc) error {
 
 	c.keyLock.Unlock()
 	return entry.Map(mapper)
+}
+
+func (c *ConcurrentMap) Mutate(key string, mutator MapperFunc, constructor Constructor) (interface{}, error) {
+	c.keyLock.Lock()
+	c.keyLock.Unlock()
+	entry, ok := c.memory[key]
+
+	if !ok {
+		entry = NewEntry(nil)
+		c.memory[key] = entry
+	}
+
+	return entry.Mutate(mutator, constructor)
 }
 
 func (c *ConcurrentMap) Get(key string) (interface{}, bool) {

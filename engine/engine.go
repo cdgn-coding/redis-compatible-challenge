@@ -10,6 +10,10 @@ var UnsupportedCommandError = errors.New("unsupported command")
 
 var UnsupportedTypeForCommand = errors.New("unsupported type")
 
+func ConcurrentListConstructor() interface{} {
+	return NewConcurrentList()
+}
+
 type Engine struct {
 	memory *ConcurrentMap
 }
@@ -44,6 +48,7 @@ func (e *Engine) Process(payload interface{}) (interface{}, error) {
 	case "GET":
 		key := payloadArray[1].(string)
 		val, ok := e.memory.Get(key)
+
 		if !ok {
 			return nil, nil
 		}
@@ -87,8 +92,54 @@ func (e *Engine) Process(payload interface{}) (interface{}, error) {
 			return nil, err
 		}
 		return "OK", nil
+	case "RPUSH":
+		key := payloadArray[1].(string)
+		var val interface{}
+		var err error
+		for _, newValue := range payloadArray[2:] {
+			val, err = e.memory.Mutate(key, e.pushRight(newValue), ConcurrentListConstructor)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return val, nil
+	case "LPUSH":
+		key := payloadArray[1].(string)
+		var val interface{}
+		var err error
+		for _, newValue := range payloadArray[2:] {
+			val, err = e.memory.Mutate(key, e.pushLeft(newValue), ConcurrentListConstructor)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return val, nil
 	default:
 		return nil, UnsupportedCommandError
+	}
+}
+
+func (e *Engine) pushRight(newValue interface{}) MapperFunc {
+	return func(val interface{}) (interface{}, error) {
+		if IsConcurrentList(val) {
+			return nil, UnsupportedTypeForCommand
+		}
+
+		list := val.(*ConcurrentList)
+		list.PushRight(newValue)
+		return list.Len(), nil
+	}
+}
+
+func (e *Engine) pushLeft(newValue interface{}) MapperFunc {
+	return func(val interface{}) (interface{}, error) {
+		if IsConcurrentList(val) {
+			return nil, UnsupportedTypeForCommand
+		}
+
+		list := val.(*ConcurrentList)
+		list.PushLeft(newValue)
+		return list.Len(), nil
 	}
 }
 

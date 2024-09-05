@@ -3,6 +3,8 @@ package resp
 import (
 	"bytes"
 	"errors"
+	"github.com/cdgn-coding/redis-compatible-challenge/engine"
+	"iter"
 	"reflect"
 	"strconv"
 	"sync"
@@ -56,6 +58,8 @@ func (s RespSerializer) SerializeWithBuffer(buf *bytes.Buffer, element interface
 	case reflect.Ptr:
 		if t.Implements(errorInterface) {
 			err = s.SerializeError(buf, element.(error))
+		} else if t.AssignableTo(engine.ConcurrentListType) {
+			err = s.SerializeIterable(buf, element.(*engine.ConcurrentList).Iterator())
 		} else {
 			return UnknownType
 		}
@@ -127,6 +131,28 @@ func (s RespSerializer) SerializeArray(buf *bytes.Buffer, data []interface{}) er
 
 		buf.Write(tempBuf.Bytes())
 	}
+
+	return nil
+}
+
+func (s RespSerializer) SerializeIterable(buf *bytes.Buffer, data iter.Seq[interface{}]) error {
+	var err error
+	tempBuf := bytes.Buffer{}
+
+	var count = 0
+	for element := range data {
+		err = s.SerializeWithBuffer(&tempBuf, element)
+		count++
+
+		if err != nil {
+			return errors.Join(err, ArrayError)
+		}
+	}
+
+	buf.WriteByte('*')
+	buf.WriteString(strconv.Itoa(count))
+	buf.WriteString("\r\n")
+	buf.Write(tempBuf.Bytes())
 
 	return nil
 }
