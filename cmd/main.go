@@ -22,6 +22,7 @@ var logger = log.New(os.Stdout, "", log.LstdFlags|log.Lmicroseconds|log.Lshortfi
 var eng = engine.NewEngine()
 
 func handleClient(conn net.Conn) {
+	defer conn.Close()
 	var parser = resp.RespParser{}
 	var serializer = resp.RespSerializer{}
 	var serialized *bytes.Buffer
@@ -63,8 +64,6 @@ func handleClient(conn net.Conn) {
 			return
 		}
 	}
-
-	defer conn.Close()
 }
 
 func startServer(ctx context.Context, port string) {
