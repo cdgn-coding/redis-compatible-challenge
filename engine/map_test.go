@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"errors"
+	"fmt"
 	"sync"
 	"testing"
 )
@@ -41,6 +43,73 @@ func TestConcurrentDelete(t *testing.T) {
 		val, _ := cm.Get(key)
 		if val != nil {
 			t.Errorf("expected key %s to be deleted", key)
+		}
+	}
+}
+
+func TestConcurrentSet(t *testing.T) {
+	cm := NewConcurrentMap()
+
+	var wg sync.WaitGroup
+	numGoroutines := 100
+	key := "key"
+
+	// Concurrently set the same key with different values
+	for i := 0; i < numGoroutines; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			cm.Set(key, i)
+		}(i)
+	}
+
+	wg.Wait()
+
+	// Check if the final value of the key is set (it should be one of the goroutines' values)
+	value, ok := cm.Get(key)
+	if !ok {
+		t.Errorf("expected key %s to exist, but it was not found", key)
+	}
+
+	// Since we are setting the same key concurrently, the final value can be from any goroutine.
+	// We just need to make sure that it exists and has a valid value (within the range of goroutines).
+	finalValue := value.(int)
+	if finalValue < 0 || finalValue >= numGoroutines {
+		t.Errorf("unexpected value for key %s: got %d, want value between 0 and %d", key, finalValue, numGoroutines-1)
+	}
+}
+
+func TestConcurrentGet(t *testing.T) {
+	cm := NewConcurrentMap()
+
+	// Set up a key-value pair before concurrent access
+	key := "key"
+	expectedValue := "value"
+	cm.Set(key, expectedValue)
+
+	var wg sync.WaitGroup
+	numGoroutines := 100
+	errs := make(chan error, numGoroutines)
+
+	// Concurrently get the same key from multiple goroutines
+	for i := 0; i < numGoroutines; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			value, ok := cm.Get(key)
+			if !ok || value != expectedValue {
+				errs <- errors.New(fmt.Sprintf("expected value %s for key %s, but got %v", expectedValue, key, value))
+			}
+		}()
+	}
+
+	wg.Wait()
+	close(errs)
+
+	// If any errors occurred during concurrent reads, fail the test
+	for err := range errs {
+		if err != nil {
+			t.Fatal(err)
 		}
 	}
 }

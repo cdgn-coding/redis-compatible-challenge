@@ -8,7 +8,7 @@ import (
 var UnsupportedCommandError = errors.New("unsupported command")
 
 type Engine struct {
-	memory ConcurrentMap
+	memory *ConcurrentMap
 }
 
 func NewEngine() *Engine {

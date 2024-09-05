@@ -27,22 +27,28 @@ func (e *Entry) Write(value interface{}) {
 }
 
 type ConcurrentMap struct {
-	memory map[string]*Entry
+	memory  map[string]*Entry
+	keyLock sync.Mutex
 }
 
-func NewConcurrentMap() ConcurrentMap {
-	return ConcurrentMap{
-		memory: make(map[string]*Entry),
+func NewConcurrentMap() *ConcurrentMap {
+	return &ConcurrentMap{
+		memory:  make(map[string]*Entry),
+		keyLock: sync.Mutex{},
 	}
 }
 
 func (c *ConcurrentMap) Set(key string, value interface{}) {
+	c.keyLock.Lock()
 	entry, ok := c.memory[key]
+
 	if !ok {
 		c.memory[key] = NewEntry(value)
+		c.keyLock.Unlock()
 		return
 	}
 
+	c.keyLock.Unlock()
 	entry.Write(value)
 }
 

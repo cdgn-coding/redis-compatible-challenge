@@ -20,7 +20,7 @@ Based on the [Redis Protocol Specification](https://redis.io/docs/latest/develop
     - [x] Basic
     - [ ] Options
   - [x] GET
-  - [ ] DEL
+  - [x] DEL
   - [ ] EXISTS
   - [ ] INCR
   - [ ] DECR
