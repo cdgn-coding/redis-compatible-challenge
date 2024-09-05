@@ -71,6 +71,16 @@ go test -v ./...
 
 ## Benchmark
 
+This implementation handles more requests than original redis
+
+```
+SET: 171.79%
+GET: 116.42%
+INCR: 181.89%
+LPUSH: 167.69%
+RPUSH: 96.10%
+```
+
 Implementation Benchmark
 
 ```
@@ -92,6 +102,19 @@ GET: 28208.74 requests per second, p50=1.551 msec
 INCR: 26219.19 requests per second, p50=1.639 msec                   
 LPUSH: 21706.10 requests per second, p50=1.999 msec                   
 RPUSH: 27624.31 requests per second, p50=1.567 msec
+```
+
+Machine details
+
+```
+[cdgn@MBP-de-Carlos ~ % sysctl -a | grep cpu
+hw.cpufamily: 943936839
+machdep.cpu.brand_string: Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz
+machdep.cpu.core_count: 4
+machdep.cpu.thread_count: 8
+
+cdgn@MBP-de-Carlos ~ % sysctl hw.memsize
+hw.memsize: 17179869184
 ```
 
 ## Contributing
