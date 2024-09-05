@@ -1,4 +1,4 @@
-package engine
+package concurrency
 
 import (
 	"iter"
@@ -79,6 +79,5 @@ func (cl *ConcurrentList) Iterator() iter.Seq[interface{}] {
 				return
 			}
 		}
-
 	}
 }

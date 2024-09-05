@@ -2,6 +2,7 @@ package engine
 
 import (
 	"errors"
+	"github.com/cdgn-coding/redis-compatible-challenge/concurrency"
 	"reflect"
 	"strconv"
 )
@@ -11,16 +12,16 @@ var UnsupportedCommandError = errors.New("unsupported command")
 var UnsupportedTypeForCommand = errors.New("unsupported type")
 
 func ConcurrentListConstructor() interface{} {
-	return NewConcurrentList()
+	return concurrency.NewConcurrentList()
 }
 
 type Engine struct {
-	memory *ConcurrentMap
+	memory *concurrency.ConcurrentMap
 }
 
 func NewEngine() *Engine {
 	return &Engine{
-		memory: NewConcurrentMap(),
+		memory: concurrency.NewConcurrentMap(),
 	}
 }
 
@@ -119,25 +120,25 @@ func (e *Engine) Process(payload interface{}) (interface{}, error) {
 	}
 }
 
-func (e *Engine) pushRight(newValue interface{}) MapperFunc {
+func (e *Engine) pushRight(newValue interface{}) concurrency.MapperFunc {
 	return func(val interface{}) (interface{}, error) {
-		if IsConcurrentList(val) {
+		if concurrency.IsConcurrentList(val) {
 			return nil, UnsupportedTypeForCommand
 		}
 
-		list := val.(*ConcurrentList)
+		list := val.(*concurrency.ConcurrentList)
 		list.PushRight(newValue)
 		return list.Len(), nil
 	}
 }
 
-func (e *Engine) pushLeft(newValue interface{}) MapperFunc {
+func (e *Engine) pushLeft(newValue interface{}) concurrency.MapperFunc {
 	return func(val interface{}) (interface{}, error) {
-		if IsConcurrentList(val) {
+		if concurrency.IsConcurrentList(val) {
 			return nil, UnsupportedTypeForCommand
 		}
 
-		list := val.(*ConcurrentList)
+		list := val.(*concurrency.ConcurrentList)
 		list.PushLeft(newValue)
 		return list.Len(), nil
 	}

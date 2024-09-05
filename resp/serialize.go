@@ -3,7 +3,7 @@ package resp
 import (
 	"bytes"
 	"errors"
-	"github.com/cdgn-coding/redis-compatible-challenge/engine"
+	"github.com/cdgn-coding/redis-compatible-challenge/concurrency"
 	"iter"
 	"reflect"
 	"strconv"
@@ -58,8 +58,8 @@ func (s RespSerializer) SerializeWithBuffer(buf *bytes.Buffer, element interface
 	case reflect.Ptr:
 		if t.Implements(errorInterface) {
 			err = s.SerializeError(buf, element.(error))
-		} else if t.AssignableTo(engine.ConcurrentListType) {
-			err = s.SerializeIterable(buf, element.(*engine.ConcurrentList).Iterator())
+		} else if t.AssignableTo(concurrency.ConcurrentListType) {
+			err = s.SerializeIterable(buf, element.(*concurrency.ConcurrentList).Iterator())
 		} else {
 			return UnknownType
 		}
