@@ -71,37 +71,27 @@ go test -v ./...
 
 ## Benchmark
 
-This implementation handles more requests than original redis because uses all cores
-
-```
-SET: 171.79%
-GET: 116.42%
-INCR: 181.89%
-LPUSH: 167.69%
-RPUSH: 96.10%
-```
-
 Implementation Benchmark
 
 ```
 cdgn@MBP-de-Carlos ~ % redis-benchmark -p 3000 -t INCR,GET,SET,LPUSH,RPUSH -q
 WARNING: Could not fetch server CONFIG
-SET: 71428.57 requests per second, p50=0.335 msec                   
-GET: 61050.06 requests per second, p50=0.351 msec                   
-INCR: 73909.83 requests per second, p50=0.335 msec                   
-LPUSH: 58105.75 requests per second, p50=0.391 msec                   
-RPUSH: 54171.18 requests per second, p50=0.375 msec                   
+SET: 78988.94 requests per second, p50=0.127 msec                   
+GET: 84674.01 requests per second, p50=0.119 msec                   
+INCR: 80515.30 requests per second, p50=0.119 msec                   
+LPUSH: 60132.29 requests per second, p50=0.127 msec                   
+RPUSH: 61996.28 requests per second, p50=0.127 msec            
 ```
 
 Redis benchmark in the same machine
 
 ```
 cdgn@MBP-de-Carlos ~ % redis-benchmark -p 6379 -t INCR,GET,SET,LPUSH,RPUSH -q
-SET: 26281.21 requests per second, p50=1.631 msec                   
-GET: 28208.74 requests per second, p50=1.551 msec                   
-INCR: 26219.19 requests per second, p50=1.639 msec                   
-LPUSH: 21706.10 requests per second, p50=1.999 msec                   
-RPUSH: 27624.31 requests per second, p50=1.567 msec
+SET: 88028.16 requests per second, p50=0.119 msec                   
+GET: 87950.75 requests per second, p50=0.119 msec                   
+INCR: 85251.49 requests per second, p50=0.119 msec                   
+LPUSH: 87873.46 requests per second, p50=0.119 msec                   
+RPUSH: 89445.44 requests per second, p50=0.119 msec
 ```
 
 Machine details
