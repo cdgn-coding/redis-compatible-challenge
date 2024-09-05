@@ -3,61 +3,9 @@ package engine
 import (
 	"errors"
 	"reflect"
-	"sync"
 )
 
 var UnsupportedCommandError = errors.New("unsupported command")
-
-type Entry struct {
-	value interface{}
-	lock  sync.Mutex
-}
-
-func NewEntry(value interface{}) *Entry {
-	return &Entry{
-		value: value,
-		lock:  sync.Mutex{},
-	}
-}
-
-func (e *Entry) Read() interface{} {
-	return e.value
-}
-
-func (e *Entry) Write(value interface{}) {
-	e.lock.Lock()
-	defer e.lock.Unlock()
-	e.value = value
-}
-
-type ConcurrentMap struct {
-	memory map[string]*Entry
-}
-
-func NewConcurrentMap() ConcurrentMap {
-	return ConcurrentMap{
-		memory: make(map[string]*Entry),
-	}
-}
-
-func (c *ConcurrentMap) Set(key string, value interface{}) {
-	entry, ok := c.memory[key]
-	if !ok {
-		c.memory[key] = NewEntry(value)
-		return
-	}
-
-	entry.Write(value)
-}
-
-func (c *ConcurrentMap) Get(key string) (interface{}, bool) {
-	entry, ok := c.memory[key]
-	if !ok {
-		return nil, false
-	}
-
-	return entry.Read(), true
-}
 
 type Engine struct {
 	memory ConcurrentMap
@@ -102,6 +50,11 @@ func (e *Engine) Process(payload interface{}) (interface{}, error) {
 		key := payloadArray[1].(string)
 		val := payloadArray[2]
 		e.memory.Set(key, val)
+		return "OK", nil
+	case "DEL":
+		for _, key := range payloadArray[1:] {
+			e.memory.Delete(key.(string))
+		}
 		return "OK", nil
 	default:
 		return nil, UnsupportedCommandError
