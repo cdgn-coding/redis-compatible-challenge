@@ -40,7 +40,7 @@ Based on the [Redis Protocol Specification](https://redis.io/docs/latest/develop
 
 3. Build the program:
    ```
-   go build -o redis-server
+   go build -o ./redis-server ./cmd/main.go
    ```
 
 4. Run the server:
@@ -67,6 +67,12 @@ This will run all tests in the project and its subdirectories.
 To run tests with verbose output:
 ```
 go test -v ./...
+```
+
+To run tests with race condition detection
+
+```
+go test -race ./...
 ```
 
 ## Benchmark
