@@ -64,8 +64,16 @@ func (e *Engine) Process(payload interface{}) (interface{}, error) {
 		}
 
 		return int64(len(payloadArray) - 1), nil
+	case "EXISTS":
+		var count int64 = 0
+		for _, key := range payloadArray[1:] {
+			if e.memory.Has(key.(string)) {
+				count++
+			}
+		}
+
+		return count, nil
 	case "INCR":
-		return "OK", nil
 		key := payloadArray[1].(string)
 		err := e.memory.Map(key, e.incrementMapper)
 		if err != nil {

@@ -89,6 +89,11 @@ func (c *ConcurrentMap) Get(key string) (interface{}, bool) {
 	return entry.Read(), true
 }
 
+func (c *ConcurrentMap) Has(key string) bool {
+	entry, ok := c.memory[key]
+	return ok && entry.Read() != nil
+}
+
 func (c *ConcurrentMap) Delete(key string) {
 	c.Set(key, nil)
 }

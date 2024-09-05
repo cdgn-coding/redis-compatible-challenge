@@ -21,7 +21,7 @@ Based on the [Redis Protocol Specification](https://redis.io/docs/latest/develop
     - [ ] Options
   - [x] GET
   - [x] DEL
-  - [ ] EXISTS
+  - [x] EXISTS
   - [x] INCR
   - [x] DECR
   - [ ] LPUSH
