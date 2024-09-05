@@ -18,7 +18,7 @@ type ConcurrentList struct {
 	head    *Node
 	tail    *Node
 	size    int
-	keyLock sync.Mutex
+	keyLock sync.RWMutex
 }
 
 func NewConcurrentList() *ConcurrentList {
@@ -65,6 +65,8 @@ func (cl *ConcurrentList) PushRight(value interface{}) {
 
 func (cl *ConcurrentList) Iterator() iter.Seq[interface{}] {
 	return func(yield func(interface{}) bool) {
+		cl.keyLock.RLock()
+		defer cl.keyLock.RUnlock()
 		for node := cl.head; node != nil; node = node.next {
 			if !yield(node.value) {
 				return
