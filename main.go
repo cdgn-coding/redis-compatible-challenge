@@ -12,6 +12,8 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"runtime"
+	"runtime/pprof"
 	"syscall"
 )
 
@@ -95,16 +97,30 @@ func startServer(ctx context.Context, port string) {
 }
 
 var port = flag.String("port", "3000", "redis port")
+var cpu = flag.Int("cpu", 1, "cpu cores")
+var profile = flag.Bool("profile", false, "profile program")
 
 func main() {
 	flag.Parse()
 
-	/*cpu, err := os.Create("cpu.prof")
-	if err != nil {
-		log.Fatal(err)
+	if *cpu > runtime.NumCPU() {
+		logger.Println("Warning cpu is beyond number of cores")
 	}
-	pprof.StartCPUProfile(cpu)
-	defer pprof.StopCPUProfile()*/
+	logger.Printf("Using %d CPU", *cpu)
+	runtime.GOMAXPROCS(*cpu)
+
+	if *profile {
+		logger.Println("Starting CPU profiler")
+		f, err := os.Create("cpu.prof")
+		if err != nil {
+			log.Fatal(err)
+		}
+		if pprof.StartCPUProfile(f) != nil {
+			logger.Fatal(err)
+			return
+		}
+		defer pprof.StopCPUProfile()
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go startServer(ctx, *port)
