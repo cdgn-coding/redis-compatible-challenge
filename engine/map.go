@@ -65,11 +65,12 @@ func (c *ConcurrentMap) Set(key string, value interface{}) {
 	entry.Write(value)
 }
 
-func (c *ConcurrentMap) Map(key string, mapper MapperFunc, defaultValue interface{}) error {
+func (c *ConcurrentMap) Map(key string, mapper MapperFunc) error {
 	c.keyLock.Lock()
 	entry, ok := c.memory[key]
 
 	if !ok {
+		defaultValue, _ := mapper(nil)
 		c.memory[key] = NewEntry(defaultValue)
 		c.keyLock.Unlock()
 		return nil

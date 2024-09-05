@@ -3,9 +3,12 @@ package engine
 import (
 	"errors"
 	"reflect"
+	"strconv"
 )
 
 var UnsupportedCommandError = errors.New("unsupported command")
+
+var UnsupportedTypeForCommand = errors.New("unsupported type")
 
 type Engine struct {
 	memory *ConcurrentMap
@@ -56,7 +59,67 @@ func (e *Engine) Process(payload interface{}) (interface{}, error) {
 			e.memory.Delete(key.(string))
 		}
 		return "OK", nil
+	case "INCR":
+		key := payloadArray[1].(string)
+		err := e.memory.Map(key, e.incrementMapper)
+		if err != nil {
+			return nil, err
+		}
+		return "OK", nil
+	case "DECR":
+		key := payloadArray[1].(string)
+		err := e.memory.Map(key, e.incrementMapper)
+		if err != nil {
+			return nil, err
+		}
+		return "OK", nil
 	default:
 		return nil, UnsupportedCommandError
 	}
+}
+
+func (e *Engine) decrementMapper(val interface{}) (interface{}, error) {
+	if val == nil {
+		return int64(-1), nil
+	}
+
+	t := reflect.TypeOf(val)
+
+	if t.Kind() == reflect.Int64 {
+		return val.(int64) - 1, nil
+	}
+
+	if t.Kind() != reflect.String {
+		return 0, UnsupportedTypeForCommand
+	}
+
+	numberVal, err := strconv.ParseInt(val.(string), 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return numberVal - 1, nil
+}
+
+func (e *Engine) incrementMapper(val interface{}) (interface{}, error) {
+	if val == nil {
+		return int64(0), nil
+	}
+
+	t := reflect.TypeOf(val)
+
+	if t.Kind() == reflect.Int64 {
+		return val.(int64) + 1, nil
+	}
+
+	if t.Kind() != reflect.String {
+		return 0, UnsupportedTypeForCommand
+	}
+
+	numberVal, err := strconv.ParseInt(val.(string), 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return numberVal + 1, nil
 }

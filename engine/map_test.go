@@ -115,6 +115,10 @@ func TestConcurrentGet(t *testing.T) {
 }
 
 func incrementMapper(v interface{}) (interface{}, error) {
+	if v == nil {
+		return 1, nil
+	}
+
 	if val, ok := v.(int); ok {
 		return val + 1, nil
 	}
@@ -123,6 +127,10 @@ func incrementMapper(v interface{}) (interface{}, error) {
 
 // decrementMapper decrements the value by 1
 func decrementMapper(v interface{}) (interface{}, error) {
+	if v == nil {
+		return -1, nil
+	}
+
 	if val, ok := v.(int); ok {
 		return val - 1, nil
 	}
@@ -143,9 +151,9 @@ func TestConcurrentMapWithIncrementDecrement(t *testing.T) {
 		go func(i int) {
 			defer wg.Done()
 			if i%2 == 0 {
-				cm.Map("counter", incrementMapper, 0) // Increment
+				cm.Map("counter", incrementMapper) // Increment
 			} else {
-				cm.Map("counter", decrementMapper, 0) // Decrement
+				cm.Map("counter", decrementMapper) // Decrement
 			}
 		}(i)
 	}

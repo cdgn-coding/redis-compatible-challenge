@@ -49,6 +49,8 @@ func (s RespSerializer) SerializeWithBuffer(buf *bytes.Buffer, element interface
 		err = s.SerializeArray(buf, element.([]interface{}))
 	case reflect.Int:
 		err = s.SerializeInteger(buf, int64(element.(int)))
+	case reflect.Int64:
+		err = s.SerializeInteger(buf, element.(int64))
 	case reflect.String:
 		err = s.SerializeBulkString(buf, element.(string))
 	case reflect.Ptr:

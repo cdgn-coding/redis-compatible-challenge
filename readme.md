@@ -22,8 +22,8 @@ Based on the [Redis Protocol Specification](https://redis.io/docs/latest/develop
   - [x] GET
   - [x] DEL
   - [ ] EXISTS
-  - [ ] INCR
-  - [ ] DECR
+  - [x] INCR
+  - [x] DECR
   - [ ] LPUSH
   - [ ] RPUSH
   - [ ] LRANGE
