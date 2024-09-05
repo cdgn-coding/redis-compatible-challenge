@@ -128,3 +128,47 @@ func TestConcurrentPushes(t *testing.T) {
 		t.Errorf("Expected list length %d, got %d", numGoroutines*numPushesPerGoroutine, list.Len())
 	}
 }
+
+func TestConcurrentIterationAndModification(t *testing.T) {
+	list := NewConcurrentList()
+	// Pre-populate the list
+	for i := 0; i < 100; i++ {
+		list.PushRight(i)
+	}
+
+	var wg sync.WaitGroup
+	const numGoroutines = 10
+
+	// Start goroutines that modify the list
+	wg.Add(numGoroutines)
+	for i := 0; i < numGoroutines; i++ {
+		go func(i int) {
+			defer wg.Done()
+			list.PushRight(i)
+		}(i)
+	}
+
+	// Start goroutines that iterate over the list
+	results := make(chan []interface{}, numGoroutines)
+	wg.Add(numGoroutines)
+	for i := 0; i < numGoroutines; i++ {
+		go func() {
+			defer wg.Done()
+			var result []interface{}
+			for val := range list.Iterator() {
+				result = append(result, val)
+			}
+			results <- result
+		}()
+	}
+
+	wg.Wait()
+	close(results)
+
+	// Check that all contain the first elements
+	for result := range results {
+		if len(result) < 100 {
+			t.Errorf("Iterator missed elements, got %d elements, want at least 100", len(result))
+		}
+	}
+}
