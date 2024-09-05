@@ -71,7 +71,7 @@ go test -v ./...
 
 ## Benchmark
 
-Initial implementation benchmark
+Implementation Benchmark
 
 ```
 cdgn@MBP-de-Carlos ~ % redis-benchmark -p 3000 -t INCR,GET,SET,LPUSH,RPUSH -q
@@ -81,6 +81,17 @@ GET: 61050.06 requests per second, p50=0.351 msec
 INCR: 73909.83 requests per second, p50=0.335 msec                   
 LPUSH: 58105.75 requests per second, p50=0.391 msec                   
 RPUSH: 54171.18 requests per second, p50=0.375 msec                   
+```
+
+Redis benchmark in the same machine
+
+```
+cdgn@MBP-de-Carlos ~ % redis-benchmark -p 6379 -t INCR,GET,SET,LPUSH,RPUSH -q
+SET: 26281.21 requests per second, p50=1.631 msec                   
+GET: 28208.74 requests per second, p50=1.551 msec                   
+INCR: 26219.19 requests per second, p50=1.639 msec                   
+LPUSH: 21706.10 requests per second, p50=1.999 msec                   
+RPUSH: 27624.31 requests per second, p50=1.567 msec
 ```
 
 ## Contributing
