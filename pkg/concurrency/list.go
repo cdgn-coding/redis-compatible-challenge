@@ -24,10 +24,6 @@ type ConcurrentList struct {
 
 var ConcurrentListType = reflect.TypeOf(&ConcurrentList{})
 
-func IsConcurrentList(obj interface{}) bool {
-	return !reflect.TypeOf(obj).AssignableTo(ConcurrentListType)
-}
-
 func NewConcurrentList() *ConcurrentList {
 	return &ConcurrentList{}
 }

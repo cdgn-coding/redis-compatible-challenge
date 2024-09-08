@@ -2,6 +2,7 @@ package resp
 
 import (
 	"bytes"
+	"container/list"
 	"errors"
 	"github.com/cdgn-coding/redis-compatible-challenge/pkg/concurrency"
 	"iter"
@@ -9,6 +10,8 @@ import (
 	"strconv"
 	"sync"
 )
+
+var listType = reflect.TypeOf(&list.List{})
 
 var EmptyError = errors.New("cannot serialize empty error")
 
@@ -60,6 +63,8 @@ func (s RespSerializer) SerializeWithBuffer(buf *bytes.Buffer, element interface
 			err = s.SerializeError(buf, element.(error))
 		} else if t.AssignableTo(concurrency.ConcurrentListType) {
 			err = s.SerializeIterable(buf, element.(*concurrency.ConcurrentList).Iterator())
+		} else if t.AssignableTo(listType) {
+			err = s.SerializeIterable(buf, s.collectList(element.(*list.List)))
 		} else {
 			return UnknownType
 		}
@@ -73,6 +78,16 @@ func (s RespSerializer) SerializeWithBuffer(buf *bytes.Buffer, element interface
 	}
 
 	return nil
+}
+
+func (RespSerializer) collectList(list *list.List) iter.Seq[interface{}] {
+	return func(yield func(interface{}) bool) {
+		for e := list.Front(); e != nil; e = e.Next() {
+			if !yield(e.Value) {
+				return
+			}
+		}
+	}
 }
 
 func (RespSerializer) SerializeString(buf *bytes.Buffer, data string) error {

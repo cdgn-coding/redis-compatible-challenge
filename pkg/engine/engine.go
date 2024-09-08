@@ -1,8 +1,9 @@
 package engine
 
 import (
+	"container/list"
 	"errors"
-	concurrency2 "github.com/cdgn-coding/redis-compatible-challenge/pkg/concurrency"
+	"github.com/cdgn-coding/redis-compatible-challenge/pkg/concurrency"
 	"reflect"
 	"strconv"
 )
@@ -12,16 +13,16 @@ var UnsupportedCommandError = errors.New("unsupported command")
 var UnsupportedTypeForCommand = errors.New("unsupported type")
 
 func ConcurrentListConstructor() interface{} {
-	return concurrency2.NewConcurrentList()
+	return concurrency.NewConcurrentList()
 }
 
 type Engine struct {
-	memory *concurrency2.ConcurrentMap
+	memory *concurrency.ConcurrentMap
 }
 
 func NewEngine() *Engine {
 	return &Engine{
-		memory: concurrency2.NewConcurrentMap(),
+		memory: concurrency.NewConcurrentMap(),
 	}
 }
 
@@ -36,6 +37,8 @@ const INCR = "INCR"
 const DECR = "DECR"
 const RPUSH = "RPUSH"
 const LPUSH = "LPUSH"
+const RPUSH_CONCURRENT_LIST = "RPUSH_CONCURRENT_LIST"
+const LPUSH_CONCURRENT_LIST = "LPUSH_CONCURRENT_LIST"
 
 var DOCS = []interface{}{}
 
@@ -113,7 +116,7 @@ func (e *Engine) Process(payload interface{}) (interface{}, error) {
 		var val interface{}
 		var err error
 		for _, newValue := range payloadArray[2:] {
-			val, err = e.memory.Mutate(key, e.pushRight(newValue), ConcurrentListConstructor)
+			err = e.memory.Map(key, e.mapPushRight(newValue))
 			if err != nil {
 				return nil, err
 			}
@@ -124,7 +127,7 @@ func (e *Engine) Process(payload interface{}) (interface{}, error) {
 		var val interface{}
 		var err error
 		for _, newValue := range payloadArray[2:] {
-			val, err = e.memory.Mutate(key, e.pushLeft(newValue), ConcurrentListConstructor)
+			err = e.memory.Map(key, e.mapPushLeft(newValue))
 			if err != nil {
 				return nil, err
 			}
@@ -135,27 +138,33 @@ func (e *Engine) Process(payload interface{}) (interface{}, error) {
 	}
 }
 
-func (e *Engine) pushRight(newValue interface{}) concurrency2.MapperFunc {
+func (e *Engine) mapPushRight(newValue interface{}) concurrency.MapperFunc {
 	return func(val interface{}) (interface{}, error) {
-		if concurrency2.IsConcurrentList(val) {
+		if val == nil {
+			val = list.New()
+		}
+
+		if !reflect.TypeOf(val).AssignableTo(reflect.TypeOf(&list.List{})) {
 			return nil, UnsupportedTypeForCommand
 		}
 
-		list := val.(*concurrency2.ConcurrentList)
-		list.PushRight(newValue)
-		return list.Len(), nil
+		val.(*list.List).PushBack(newValue)
+		return val, nil
 	}
 }
 
-func (e *Engine) pushLeft(newValue interface{}) concurrency2.MapperFunc {
+func (e *Engine) mapPushLeft(newValue interface{}) concurrency.MapperFunc {
 	return func(val interface{}) (interface{}, error) {
-		if concurrency2.IsConcurrentList(val) {
+		if val == nil {
+			val = list.New()
+		}
+
+		if !reflect.TypeOf(val).AssignableTo(reflect.TypeOf(&list.List{})) {
 			return nil, UnsupportedTypeForCommand
 		}
 
-		list := val.(*concurrency2.ConcurrentList)
-		list.PushLeft(newValue)
-		return list.Len(), nil
+		val.(*list.List).PushFront(newValue)
+		return val, nil
 	}
 }
 
