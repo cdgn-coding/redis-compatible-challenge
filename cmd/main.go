@@ -44,10 +44,12 @@ func main() {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
+	ready := make(chan struct{})
 
 	eng := engine.NewEngine()
 	serv := server.NewServer(eng, logger)
-	go serv.StartServer(ctx, *port)
+	go serv.StartServer(ctx, *port, ready)
+	<-ready
 
 	signalCh := make(chan os.Signal, 1)
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)

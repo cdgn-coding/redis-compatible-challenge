@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -28,9 +27,9 @@ func (s *Server) handleClient(conn net.Conn) {
 	var parser = resp.RespParser{}
 	var serializer = resp.RespSerializer{}
 	var serialized *bytes.Buffer
-	scanner := bufio.NewScanner(conn)
+
 	for {
-		payload, err := parser.ParseWithScanner(scanner)
+		payload, err := parser.ParseWithReader(conn)
 
 		if err != nil {
 			s.logger.Printf("client closed connection from %s", conn.RemoteAddr())
@@ -68,7 +67,7 @@ func (s *Server) handleClient(conn net.Conn) {
 	}
 }
 
-func (s *Server) StartServer(ctx context.Context, port string) {
+func (s *Server) StartServer(ctx context.Context, port string, ready chan struct{}) {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {
 		s.logger.Fatal(err)
@@ -76,11 +75,14 @@ func (s *Server) StartServer(ctx context.Context, port string) {
 
 	defer listener.Close()
 
-	s.logger.Println("Listening on :3000...")
+	s.logger.Printf("Listening on %s", listener.Addr())
+	ready <- struct{}{}
+	defer close(ready)
 
 	for {
 		select {
 		case <-ctx.Done():
+			listener.Close()
 			return
 		default:
 			conn, err := listener.Accept()
@@ -89,7 +91,7 @@ func (s *Server) StartServer(ctx context.Context, port string) {
 				continue
 			}
 
-			s.logger.Printf("accepted connection from %s", conn.RemoteAddr())
+			s.logger.Printf("Accepted connection from %s", conn.RemoteAddr())
 			go s.handleClient(conn)
 		}
 	}
