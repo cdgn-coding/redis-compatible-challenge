@@ -15,7 +15,9 @@ import (
 
 var port = flag.String("port", "3000", "port")
 var threads = flag.Int("threads", 1, "number of threads")
-var profile = flag.Bool("profile", false, "profile program")
+var cpuProfile = flag.Bool("cpuprofile", true, "profile cpu")
+var memProfile = flag.Bool("memprofile", true, "profile memory")
+var mutexProfile = flag.Bool("mutexprofile", true, "profile mutexes")
 
 func main() {
 	flag.Parse()
@@ -30,7 +32,7 @@ func main() {
 	runtime.GOMAXPROCS(*threads)
 
 	// Configure profiler
-	if *profile {
+	if *cpuProfile {
 		logger.Println("Starting CPU profiler")
 		f, err := os.Create("cpu.prof")
 		if err != nil {
@@ -41,6 +43,11 @@ func main() {
 			return
 		}
 		defer pprof.StopCPUProfile()
+	}
+	// Enable mutex profiling
+	if *mutexProfile {
+		runtime.SetMutexProfileFraction(1)
+		defer runtime.SetMutexProfileFraction(0)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -57,4 +64,16 @@ func main() {
 	// Wait for termination signal
 	<-signalCh
 	cancel()
+
+	if *memProfile {
+		f, err := os.Create("mem.prof")
+		if err != nil {
+			log.Fatal("could not create memory profile: ", err)
+		}
+		defer f.Close() // error handling omitted for example
+		runtime.GC()    // get up-to-date statistics
+		if err = pprof.WriteHeapProfile(f); err != nil {
+			log.Fatal("could not write memory profile: ", err)
+		}
+	}
 }
