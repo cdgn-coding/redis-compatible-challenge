@@ -82,7 +82,11 @@ func (s *Server) StartServer(ctx context.Context, port string, ready chan struct
 	for {
 		select {
 		case <-ctx.Done():
-			listener.Close()
+			err = listener.Close()
+			if err != nil {
+				s.logger.Printf("Error closing listener: %s", err)
+				return
+			}
 			return
 		default:
 			conn, err := listener.Accept()
