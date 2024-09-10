@@ -73,6 +73,23 @@ RPUSH: 89445.44 requests per second, p50=0.119 msec
    ./redis-server
    ```
 
+You can start the server with the following command line options:
+
+* port: Set the server port (default: 3000)
+* threads: Specify the number of threads to use (default: 1)
+* cpuprofile: Enable CPU profiling (default: false)
+* memprofile: Enable memory profiling (default: false)
+* mutexprofile: Enable mutex profiling (default: false)
+* reload: Enable reloading of memory from file on startup (default: true)
+* memfile: Specify the path to the memory file (default: "memory.resp")
+* global: Use a global path for configuration and data (default: false)
+
+Here's an example command to run the server on port 8000, with CPU and memory profiling enabled, and using 4 threads:
+
+```
+./redis-compatible-challenge -port="8000" -threads=4 -cpuprofile=true -memprofile=true -mutexprofile=true -reload=true -memfile="path/to/your/memory.resp" -global=false
+```
+
 ## Testing
 
 To run the tests for this project:
