@@ -118,7 +118,9 @@ func (c *ConcurrentMap) Mutate(key string, mutator MapperFunc, constructor Const
 }
 
 func (c *ConcurrentMap) Get(key string) (interface{}, bool) {
+	c.keyLock.Lock()
 	entry, ok := c.memory[key]
+	c.keyLock.Unlock()
 	if !ok {
 		return nil, false
 	}
@@ -133,8 +135,8 @@ func (c *ConcurrentMap) Has(key string) bool {
 
 func (c *ConcurrentMap) Delete(key string) {
 	c.keyLock.Lock()
+	defer c.keyLock.Unlock()
 	delete(c.memory, key)
-	c.keyLock.Unlock()
 }
 
 type Pair struct {

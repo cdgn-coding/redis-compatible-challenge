@@ -35,11 +35,11 @@ Implementation Benchmark
 ```
 cdgn@MBP-de-Carlos ~ % redis-benchmark -p 3000 -t INCR,GET,SET,LPUSH,RPUSH -q
 WARNING: Could not fetch server CONFIG
-SET: 78988.94 requests per second, p50=0.127 msec                   
-GET: 84674.01 requests per second, p50=0.119 msec                   
-INCR: 80515.30 requests per second, p50=0.119 msec                   
-LPUSH: 60132.29 requests per second, p50=0.127 msec                   
-RPUSH: 61996.28 requests per second, p50=0.127 msec            
+SET: 66489.37 requests per second, p50=0.367 msec                   
+GET: 64977.26 requests per second, p50=0.375 msec                   
+INCR: 69735.01 requests per second, p50=0.359 msec                   
+LPUSH: 57077.62 requests per second, p50=0.407 msec                   
+RPUSH: 52164.84 requests per second, p50=0.431 msec                            
 ```
 
 Redis benchmark in the same machine
@@ -51,6 +51,19 @@ GET: 87950.75 requests per second, p50=0.119 msec
 INCR: 85251.49 requests per second, p50=0.119 msec                   
 LPUSH: 87873.46 requests per second, p50=0.119 msec                   
 RPUSH: 89445.44 requests per second, p50=0.119 msec
+```
+
+Machine details
+
+```
+[cdgn@MBP-de-Carlos ~ % sysctl -a | grep cpu
+hw.cpufamily: 943936839
+machdep.cpu.brand_string: Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz
+machdep.cpu.core_count: 4
+machdep.cpu.thread_count: 8
+
+cdgn@MBP-de-Carlos ~ % sysctl hw.memsize
+hw.memsize: 17179869184
 ```
 
 ## Getting Started
@@ -115,19 +128,6 @@ To run tests with race condition detection
 
 ```
 go test -race ./...
-```
-
-Machine details
-
-```
-[cdgn@MBP-de-Carlos ~ % sysctl -a | grep cpu
-hw.cpufamily: 943936839
-machdep.cpu.brand_string: Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz
-machdep.cpu.core_count: 4
-machdep.cpu.thread_count: 8
-
-cdgn@MBP-de-Carlos ~ % sysctl hw.memsize
-hw.memsize: 17179869184
 ```
 
 ## Linting
