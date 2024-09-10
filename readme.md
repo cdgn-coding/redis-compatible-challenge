@@ -2,6 +2,8 @@
 
 This project is an implementation of a Redis-like database server, based on the challenge from [Coding Challenges](https://codingchallenges.fyi/challenges/challenge-redis).
 
+This implementation is **dependency free**.
+
 ## Project Overview
 
 The goal is to create a simplified version of Redis, implementing core functionality and following the Redis protocol specification.
@@ -16,9 +18,7 @@ Based on the [Redis Protocol Specification](https://redis.io/docs/latest/develop
 - [x] Implement commands
   - [x] PING
   - [x] ECHO
-  - [ ] SET
-    - [x] Basic
-    - [ ] Options
+  - [x] SET
   - [x] GET
   - [x] DEL
   - [x] EXISTS
@@ -27,6 +27,31 @@ Based on the [Redis Protocol Specification](https://redis.io/docs/latest/develop
   - [x] LPUSH
   - [x] RPUSH
   - [x] SAVE
+
+## Benchmark
+
+Implementation Benchmark
+
+```
+cdgn@MBP-de-Carlos ~ % redis-benchmark -p 3000 -t INCR,GET,SET,LPUSH,RPUSH -q
+WARNING: Could not fetch server CONFIG
+SET: 78988.94 requests per second, p50=0.127 msec                   
+GET: 84674.01 requests per second, p50=0.119 msec                   
+INCR: 80515.30 requests per second, p50=0.119 msec                   
+LPUSH: 60132.29 requests per second, p50=0.127 msec                   
+RPUSH: 61996.28 requests per second, p50=0.127 msec            
+```
+
+Redis benchmark in the same machine
+
+```
+cdgn@MBP-de-Carlos ~ % redis-benchmark -p 6379 -t INCR,GET,SET,LPUSH,RPUSH -q
+SET: 88028.16 requests per second, p50=0.119 msec                   
+GET: 87950.75 requests per second, p50=0.119 msec                   
+INCR: 85251.49 requests per second, p50=0.119 msec                   
+LPUSH: 87873.46 requests per second, p50=0.119 msec                   
+RPUSH: 89445.44 requests per second, p50=0.119 msec
+```
 
 ## Getting Started
 
@@ -75,31 +100,6 @@ To run tests with race condition detection
 go test -race ./...
 ```
 
-## Benchmark
-
-Implementation Benchmark
-
-```
-cdgn@MBP-de-Carlos ~ % redis-benchmark -p 3000 -t INCR,GET,SET,LPUSH,RPUSH -q
-WARNING: Could not fetch server CONFIG
-SET: 78988.94 requests per second, p50=0.127 msec                   
-GET: 84674.01 requests per second, p50=0.119 msec                   
-INCR: 80515.30 requests per second, p50=0.119 msec                   
-LPUSH: 60132.29 requests per second, p50=0.127 msec                   
-RPUSH: 61996.28 requests per second, p50=0.127 msec            
-```
-
-Redis benchmark in the same machine
-
-```
-cdgn@MBP-de-Carlos ~ % redis-benchmark -p 6379 -t INCR,GET,SET,LPUSH,RPUSH -q
-SET: 88028.16 requests per second, p50=0.119 msec                   
-GET: 87950.75 requests per second, p50=0.119 msec                   
-INCR: 85251.49 requests per second, p50=0.119 msec                   
-LPUSH: 87873.46 requests per second, p50=0.119 msec                   
-RPUSH: 89445.44 requests per second, p50=0.119 msec
-```
-
 Machine details
 
 ```
@@ -111,6 +111,14 @@ machdep.cpu.thread_count: 8
 
 cdgn@MBP-de-Carlos ~ % sysctl hw.memsize
 hw.memsize: 17179869184
+```
+
+## Linting
+
+```
+golangci-lint run ./...
+gosec ./...
+govulncheck ./...
 ```
 
 ## Contributing

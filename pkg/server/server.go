@@ -45,7 +45,10 @@ func (s *Server) handleClient(conn net.Conn) {
 			s.logger.Println(err)
 			serialized, _ = serializer.Serialize(err)
 			_, err = conn.Write(serialized.Bytes())
-			continue
+			if err != nil {
+				s.logger.Println(err)
+				return
+			}
 		}
 
 		// Serialize response
@@ -56,7 +59,10 @@ func (s *Server) handleClient(conn net.Conn) {
 			s.logger.Println(err)
 			serialized, _ = serializer.Serialize(err)
 			_, err = conn.Write(serialized.Bytes())
-			continue
+			if err != nil {
+				s.logger.Println(err)
+				return
+			}
 		}
 
 		// Write response

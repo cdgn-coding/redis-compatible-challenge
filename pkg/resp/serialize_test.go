@@ -76,7 +76,7 @@ func TestRespSerializer_Serialize(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.message, func(t *testing.T) {
 			actual, err := serializer.Serialize(c.data)
-			if !errors.Is(err, c.err) || bytes.Compare(actual.Bytes(), c.expected) != 0 {
+			if !errors.Is(err, c.err) || !bytes.Equal(actual.Bytes(), c.expected) {
 				t.Errorf("Actual data %s, actual error %v, expected data %s, expected error %v", actual, err, c.expected, c.err)
 			}
 		})

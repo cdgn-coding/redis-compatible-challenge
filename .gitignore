@@ -2,3 +2,4 @@
 redis-server
 cpu.prof
 mem.prof
+pkg/engine/var/

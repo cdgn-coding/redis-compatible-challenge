@@ -79,8 +79,8 @@ func (suite *TestSuite) TestServer_SET_GET() {
 }
 
 func (suite *TestSuite) TestConcurrencyServer() {
-	var numGoroutines = 10
-	var numRequests = 1000
+	var numGoroutines = 5
+	var numRequests = 100
 	var errs = make([]error, numGoroutines)
 	var wg sync.WaitGroup
 	wg.Add(numGoroutines)

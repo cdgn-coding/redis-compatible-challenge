@@ -46,15 +46,15 @@ func NewEngine(opts EngineOptions) (*Engine, error) {
 		eng.file = filepath.Join(os.TempDir(), "memory.resp")
 	}
 
+	if opts.GlobalPath != nil && *opts.GlobalPath {
+		eng.global = true
+	}
+
 	if opts.Load != nil && *opts.Load {
 		err := eng.load()
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	if opts.GlobalPath != nil && *opts.GlobalPath {
-		eng.global = true
 	}
 
 	return eng, nil
@@ -76,6 +76,7 @@ const SAVE = "SAVE"
 var DOCS = []interface{}{}
 
 const OK = "OK"
+const PONG = "PONG"
 
 func (e *Engine) Process(payload interface{}) (interface{}, error) {
 	if reflect.TypeOf(payload).Kind() != reflect.Slice {
@@ -94,9 +95,12 @@ func (e *Engine) Process(payload interface{}) (interface{}, error) {
 			return nil, UnsupportedCommandError
 		}
 	case PING:
-		return []interface{}{"PONG"}, nil
+		return PONG, nil
 	case ECHO:
-		return payloadArray[1:], nil
+		if len(payloadArray) != 2 {
+			return nil, UnsupportedTypeForCommand
+		}
+		return payloadArray[1], nil
 	case GET:
 		key := payloadArray[1].(string)
 		val, ok := e.memory.Get(key)
@@ -144,7 +148,7 @@ func (e *Engine) Process(payload interface{}) (interface{}, error) {
 		return OK, nil
 	case DECR:
 		key := payloadArray[1].(string)
-		err := e.memory.Map(key, e.incrementMapper)
+		err := e.memory.Map(key, e.decrementMapper)
 		if err != nil {
 			return nil, err
 		}
@@ -198,7 +202,7 @@ func (e *Engine) load() error {
 	}
 
 	// Open the File
-	file, err := os.Open(savePath)
+	file, err := os.Open(filepath.Clean(savePath))
 	if err != nil {
 		return fmt.Errorf("failed to open File: %w", err)
 	}
@@ -241,7 +245,7 @@ func (e *Engine) save() error {
 
 	// Ensure the directory exists
 	saveDir := filepath.Dir(savePath)
-	err = os.MkdirAll(saveDir, 0755)
+	err = os.MkdirAll(saveDir, 0750)
 	if err != nil {
 		return err
 	}
@@ -253,15 +257,14 @@ func (e *Engine) save() error {
 	}
 
 	// Create the new File
-	file, err := os.Create(savePath)
+	file, err := os.Create(filepath.Clean(savePath))
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
 	for pair := range e.memory.Iterable() {
-		var command []interface{}
-		command = []interface{}{SET, pair.Key, pair.Value}
+		command := []interface{}{SET, pair.Key, pair.Value}
 		payload, err := e.serializer.Serialize(command)
 		if err != nil {
 			return err
@@ -323,7 +326,7 @@ func (e *Engine) decrementMapper(val interface{}) (interface{}, error) {
 
 func (e *Engine) incrementMapper(val interface{}) (interface{}, error) {
 	if val == nil {
-		return int64(0), nil
+		return int64(1), nil
 	}
 
 	t := reflect.TypeOf(val)

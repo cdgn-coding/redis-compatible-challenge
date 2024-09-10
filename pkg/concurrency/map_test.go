@@ -1,7 +1,6 @@
 package concurrency
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 	"testing"
@@ -98,7 +97,7 @@ func TestConcurrentGet(t *testing.T) {
 			defer wg.Done()
 			value, ok := cm.Get(key)
 			if !ok || value != expectedValue {
-				errs <- errors.New(fmt.Sprintf("expected value %s for key %s, but got %v", expectedValue, key, value))
+				errs <- fmt.Errorf("expected value %s for key %s, but got %v", expectedValue, key, value)
 			}
 		}()
 	}
