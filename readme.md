@@ -30,7 +30,7 @@ Based on the [Redis Protocol Specification](https://redis.io/docs/latest/develop
 
 ## Benchmark
 
-Implementation Benchmark (-cpu=2)
+Implementation Benchmark (-threads=2)
 
 ```
 cdgn@MBP-de-Carlos ~ % redis-benchmark -p 3000 -t INCR,GET,SET,LPUSH,RPUSH -q
