@@ -15,9 +15,12 @@ import (
 
 var port = flag.String("port", "3000", "port")
 var threads = flag.Int("threads", 1, "number of threads")
-var cpuProfile = flag.Bool("cpuprofile", true, "profile cpu")
-var memProfile = flag.Bool("memprofile", true, "profile memory")
-var mutexProfile = flag.Bool("mutexprofile", true, "profile mutexes")
+var cpuProfile = flag.Bool("cpuprofile", false, "profile cpu")
+var memProfile = flag.Bool("memprofile", false, "profile memory")
+var mutexProfile = flag.Bool("mutexprofile", false, "profile mutexes")
+var reload = flag.Bool("reload", true, "reload memory")
+var memfile = flag.String("memfile", "memory.resp", "path to memory file")
+var global = flag.Bool("global", false, "use global path")
 
 func main() {
 	flag.Parse()
@@ -53,7 +56,17 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	ready := make(chan struct{})
 
-	eng := engine.NewEngine()
+	opts := engine.EngineOptions{
+		Load:       reload,
+		GlobalPath: global,
+	}
+	if *memfile != "" {
+		opts.File = memfile
+	}
+	eng, err := engine.NewEngine(opts)
+	if err != nil {
+		logger.Fatalf("Error creating engine: %v", err)
+	}
 	serv := server.NewServer(eng, logger)
 	go serv.StartServer(ctx, *port, ready)
 	<-ready

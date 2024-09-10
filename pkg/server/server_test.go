@@ -23,8 +23,9 @@ type TestSuite struct {
 }
 
 func (suite *TestSuite) SetupSuite() {
+	eng, _ := engine.NewEngine(engine.EngineOptions{})
 	serv := &Server{
-		eng:    engine.NewEngine(),
+		eng:    eng,
 		logger: log.New(io.Discard, "", log.LstdFlags),
 	}
 	ctx, cancel := context.WithCancel(context.Background())
@@ -55,7 +56,7 @@ func (suite *TestSuite) TestServer_SET_GET() {
 
 	parser := resp.RespParser{}
 
-	res, err := parser.ParseWithScanner(scanner)
+	res, err := parser.ParseScanner(scanner)
 	if err != nil {
 		suite.T().Fatal(err)
 	}
@@ -67,7 +68,7 @@ func (suite *TestSuite) TestServer_SET_GET() {
 	conn.Write([]byte("*2\r\n$3\r\nGET\r\n$3\r\nkey\r\n"))
 	<-time.After(1 * time.Second)
 
-	res, err = parser.ParseWithScanner(scanner)
+	res, err = parser.ParseScanner(scanner)
 	if err != nil {
 		suite.T().Fatal(err)
 	}
@@ -118,7 +119,7 @@ func (suite *TestSuite) TestConcurrencyServer() {
 
 				case <-ticker.C:
 					_ = conn.SetReadDeadline(time.Now().Add(1 * time.Millisecond))
-					_, err = parser.ParseWithScanner(scanner)
+					_, err = parser.ParseScanner(scanner)
 
 					if err != nil {
 						continue

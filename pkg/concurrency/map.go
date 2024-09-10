@@ -1,6 +1,9 @@
 package concurrency
 
-import "sync"
+import (
+	"iter"
+	"sync"
+)
 
 type MapperFunc = func(v interface{}) (interface{}, error)
 
@@ -129,5 +132,31 @@ func (c *ConcurrentMap) Has(key string) bool {
 }
 
 func (c *ConcurrentMap) Delete(key string) {
-	c.Set(key, nil)
+	c.keyLock.Lock()
+	delete(c.memory, key)
+	c.keyLock.Unlock()
+}
+
+type Pair struct {
+	Key   string
+	Value interface{}
+}
+
+func NewPair(key string, value interface{}) Pair {
+	return Pair{
+		Key:   key,
+		Value: value,
+	}
+}
+
+func (c *ConcurrentMap) Iterable() iter.Seq[Pair] {
+	return func(yield func(Pair) bool) {
+		c.keyLock.Lock()
+		defer c.keyLock.Unlock()
+		for k, v := range c.memory {
+			if !yield(NewPair(k, v.Read())) {
+				return
+			}
+		}
+	}
 }

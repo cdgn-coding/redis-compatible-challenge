@@ -28,6 +28,14 @@ func NewConcurrentList() *ConcurrentList {
 	return &ConcurrentList{}
 }
 
+func NewConcurrentListFromSlice(slice []interface{}) *ConcurrentList {
+	cl := NewConcurrentList()
+	for _, val := range slice {
+		cl.PushRight(val)
+	}
+	return cl
+}
+
 func (cl *ConcurrentList) Len() int {
 	return cl.size
 }

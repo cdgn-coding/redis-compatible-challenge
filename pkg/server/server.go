@@ -27,9 +27,10 @@ func (s *Server) handleClient(conn net.Conn) {
 	var parser = resp.RespParser{}
 	var serializer = resp.RespSerializer{}
 	var serialized *bytes.Buffer
+	var scanner = parser.CreateScanner(conn)
 
 	for {
-		payload, err := parser.ParseWithReader(conn)
+		payload, err := parser.ParseScanner(scanner)
 
 		if err != nil {
 			s.logger.Printf("client closed connection from %s", conn.RemoteAddr())
@@ -44,7 +45,7 @@ func (s *Server) handleClient(conn net.Conn) {
 			s.logger.Println(err)
 			serialized, _ = serializer.Serialize(err)
 			_, err = conn.Write(serialized.Bytes())
-			return
+			continue
 		}
 
 		// Serialize response

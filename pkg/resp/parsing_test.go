@@ -52,7 +52,7 @@ func TestRespParser_Parse(t *testing.T) {
 		{
 			want:    []interface{}{},
 			data:    []byte("*0\r\n"),
-			name:    "Empty array",
+			name:    "EmptyPayload array",
 			wantErr: false,
 		},
 		{

@@ -1,9 +1,12 @@
 package engine
 
 import (
-	"container/list"
 	"errors"
+	"fmt"
 	"github.com/cdgn-coding/redis-compatible-challenge/pkg/concurrency"
+	"github.com/cdgn-coding/redis-compatible-challenge/pkg/resp"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strconv"
 )
@@ -17,13 +20,44 @@ func ConcurrentListConstructor() interface{} {
 }
 
 type Engine struct {
-	memory *concurrency.ConcurrentMap
+	memory     *concurrency.ConcurrentMap
+	serializer *resp.RespSerializer
+	parser     *resp.RespParser
+	file       string
+	global     bool
 }
 
-func NewEngine() *Engine {
-	return &Engine{
-		memory: concurrency.NewConcurrentMap(),
+type EngineOptions struct {
+	File       *string
+	Load       *bool
+	GlobalPath *bool
+}
+
+func NewEngine(opts EngineOptions) (*Engine, error) {
+	eng := &Engine{
+		memory:     concurrency.NewConcurrentMap(),
+		serializer: &resp.RespSerializer{},
+		parser:     &resp.RespParser{},
 	}
+
+	if opts.File != nil {
+		eng.file = *opts.File
+	} else {
+		eng.file = filepath.Join(os.TempDir(), "memory.resp")
+	}
+
+	if opts.Load != nil && *opts.Load {
+		err := eng.load()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if opts.GlobalPath != nil && *opts.GlobalPath {
+		eng.global = true
+	}
+
+	return eng, nil
 }
 
 const COMMAND = "COMMAND"
@@ -37,8 +71,7 @@ const INCR = "INCR"
 const DECR = "DECR"
 const RPUSH = "RPUSH"
 const LPUSH = "LPUSH"
-const RPUSH_CONCURRENT_LIST = "RPUSH_CONCURRENT_LIST"
-const LPUSH_CONCURRENT_LIST = "LPUSH_CONCURRENT_LIST"
+const SAVE = "SAVE"
 
 var DOCS = []interface{}{}
 
@@ -76,7 +109,12 @@ func (e *Engine) Process(payload interface{}) (interface{}, error) {
 	case SET:
 		key := payloadArray[1].(string)
 		val := payloadArray[2]
-		e.memory.Set(key, val)
+		kind := reflect.TypeOf(val).Kind()
+		if kind != reflect.Slice && kind != reflect.Array {
+			e.memory.Set(key, val)
+			return OK, nil
+		}
+		e.memory.Set(key, concurrency.NewConcurrentListFromSlice(val.([]interface{})))
 		return OK, nil
 	case DEL:
 		for _, key := range payloadArray[1:] {
@@ -116,7 +154,7 @@ func (e *Engine) Process(payload interface{}) (interface{}, error) {
 		var val interface{}
 		var err error
 		for _, newValue := range payloadArray[2:] {
-			err = e.memory.Map(key, e.mapPushRight(newValue))
+			val, err = e.memory.Mutate(key, e.pushRight(newValue), ConcurrentListConstructor)
 			if err != nil {
 				return nil, err
 			}
@@ -127,44 +165,136 @@ func (e *Engine) Process(payload interface{}) (interface{}, error) {
 		var val interface{}
 		var err error
 		for _, newValue := range payloadArray[2:] {
-			err = e.memory.Map(key, e.mapPushLeft(newValue))
+			val, err = e.memory.Mutate(key, e.pushLeft(newValue), ConcurrentListConstructor)
 			if err != nil {
 				return nil, err
 			}
 		}
 		return val, nil
+	case SAVE:
+		err := e.save()
+		if err != nil {
+			return nil, err
+		}
+		return OK, nil
 	default:
 		return nil, UnsupportedCommandError
 	}
 }
 
-func (e *Engine) mapPushRight(newValue interface{}) concurrency.MapperFunc {
-	return func(val interface{}) (interface{}, error) {
-		if val == nil {
-			val = list.New()
+func (e *Engine) load() error {
+	savePath, err := e.getPath()
+	if err != nil {
+		return err
+	}
+
+	// Check if the File exists
+	_, err = os.Stat(savePath)
+	if os.IsNotExist(err) {
+		// File doesn't exist, which is not an error
+		return nil
+	} else if err != nil {
+		return fmt.Errorf("failed to check File status: %w", err)
+	}
+
+	// Open the File
+	file, err := os.Open(savePath)
+	if err != nil {
+		return fmt.Errorf("failed to open File: %w", err)
+	}
+	defer file.Close()
+	scanner := e.parser.CreateScanner(file)
+	for result := range e.parser.Iterate(scanner) {
+		if result.Err() != nil {
+			return result.Err()
 		}
 
-		if !reflect.TypeOf(val).AssignableTo(reflect.TypeOf(&list.List{})) {
+		_, err = e.Process(result.Value())
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (e *Engine) getPath() (string, error) {
+	if e.global {
+		return e.file, nil
+	}
+
+	dir, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("failed to get working directory: %w", err)
+	}
+
+	savePath := filepath.Join(dir, e.file)
+
+	return savePath, nil
+}
+
+func (e *Engine) save() error {
+	savePath, err := e.getPath()
+	if err != nil {
+		return err
+	}
+
+	// Ensure the directory exists
+	saveDir := filepath.Dir(savePath)
+	err = os.MkdirAll(saveDir, 0755)
+	if err != nil {
+		return err
+	}
+
+	// Remove the existing File if it exists
+	err = os.Remove(savePath)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	// Create the new File
+	file, err := os.Create(savePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	for pair := range e.memory.Iterable() {
+		var command []interface{}
+		command = []interface{}{SET, pair.Key, pair.Value}
+		payload, err := e.serializer.Serialize(command)
+		if err != nil {
+			return err
+		}
+
+		_, err = file.Write(payload.Bytes())
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (e *Engine) pushRight(newValue interface{}) concurrency.MapperFunc {
+	return func(val interface{}) (interface{}, error) {
+		ls, ok := val.(*concurrency.ConcurrentList)
+		if !ok {
 			return nil, UnsupportedTypeForCommand
 		}
-
-		val.(*list.List).PushBack(newValue)
-		return val, nil
+		ls.PushRight(newValue)
+		return ls.Len(), nil
 	}
 }
 
-func (e *Engine) mapPushLeft(newValue interface{}) concurrency.MapperFunc {
+func (e *Engine) pushLeft(newValue interface{}) concurrency.MapperFunc {
 	return func(val interface{}) (interface{}, error) {
-		if val == nil {
-			val = list.New()
-		}
-
-		if !reflect.TypeOf(val).AssignableTo(reflect.TypeOf(&list.List{})) {
+		ls, ok := val.(*concurrency.ConcurrentList)
+		if !ok {
 			return nil, UnsupportedTypeForCommand
 		}
-
-		val.(*list.List).PushFront(newValue)
-		return val, nil
+		ls.PushLeft(newValue)
+		return ls.Len(), nil
 	}
 }
 

@@ -34,7 +34,7 @@ func TestRespSerializer_Serialize(t *testing.T) {
 		{
 			data:     []interface{}{},
 			expected: []byte("*0\r\n"),
-			message:  "Empty array",
+			message:  "EmptyPayload array",
 			err:      nil,
 		},
 		{
