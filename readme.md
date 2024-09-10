@@ -30,16 +30,16 @@ Based on the [Redis Protocol Specification](https://redis.io/docs/latest/develop
 
 ## Benchmark
 
-Implementation Benchmark
+Implementation Benchmark (-cpu=2)
 
 ```
 cdgn@MBP-de-Carlos ~ % redis-benchmark -p 3000 -t INCR,GET,SET,LPUSH,RPUSH -q
 WARNING: Could not fetch server CONFIG
-SET: 66489.37 requests per second, p50=0.367 msec                   
-GET: 64977.26 requests per second, p50=0.375 msec                   
-INCR: 69735.01 requests per second, p50=0.359 msec                   
-LPUSH: 57077.62 requests per second, p50=0.407 msec                   
-RPUSH: 52164.84 requests per second, p50=0.431 msec                            
+SET: 71326.68 requests per second, p50=0.327 msec                   
+GET: 76335.88 requests per second, p50=0.311 msec                   
+INCR: 78554.59 requests per second, p50=0.319 msec                   
+LPUSH: 68212.83 requests per second, p50=0.319 msec                   
+RPUSH: 71377.59 requests per second, p50=0.319 msec                                            
 ```
 
 Redis benchmark in the same machine
