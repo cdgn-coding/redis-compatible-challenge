@@ -26,7 +26,7 @@ Based on the [Redis Protocol Specification](https://redis.io/docs/latest/develop
   - [x] DECR
   - [x] LPUSH
   - [x] RPUSH
-  - [ ] SAVE
+  - [x] SAVE
 
 ## Getting Started
 
